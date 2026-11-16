@@ -98,7 +98,8 @@ claude plugin install devkit@devkit
 | 훅 | 막는 것 |
 |---|---|
 | `hooks/korean-stop.py` (Stop) | 사용자에게 한 마지막 말이 한국어가 아니면 한 번 되돌려 한국어로 다시 쓰게 한다(코드·경로·짧은 줄은 제외) |
-| `hooks/guard-bash.py` (PreToolUse) | 체크가 아직 안 붙었거나 돌고 있거나 실패한 PR 의 `gh pr merge`, `pytest … \| tail && 커밋·머지`(실패를 삼킴) |
+| `hooks/guard-bash.py` (PreToolUse) | 바뀐 파일이 0개이거나 체크가 아직 안 붙었거나 돌고 있거나 실패한 PR 의 `gh pr merge`, `pytest … \| tail && 커밋·머지`(실패를 삼킴) |
+| `hooks/tool-text.py` (PreToolUse, 사용자가 읽는 도구 글) | 작업 요약·작업 목록·버튼(`wrap_up`·`update_plan`), 파일 캡션, `AskUserQuestion` 질문·선택지, Bash 설명이 한국어가 아니면 막는다(판정은 `korean-stop.py` 와 같다. 짧은 글은 한글 낱말 없이 두 낱말 이상일 때만). `AskUserQuestion` 질문이 둘 이상이어도 막는다 |
 
 훅을 고치면 `scripts/test_hooks.py` 에 막아야 할 예와 통과해야 할 예를 같이 넣는다.
 
@@ -110,7 +111,7 @@ claude plugin install devkit@devkit
 python3 scripts/check.py
 ```
 
-판(`plugin.json` 의 version)은 끝자리만 1 씩 올린다(0.6.1 → 0.6.2). `check.py` 와 CI 가 막는다.
+판(`plugin.json` 의 version)은 끝자리만 1 씩 올린다(0.6.2 → 0.6.3). `check.py` 와 CI 가 막는다.
 
 devkit 을 고칠 때도 같다. 스킬에 문장을 더 쓰기 전에 검사나 구조로 막을 수 있는지 먼저 본다.
 

@@ -27,6 +27,29 @@ with tempfile.TemporaryDirectory() as t:
     if run('korean-stop.py', {'transcript_path': p, 'stop_hook_active': True}):
         fails.append('korean-stop: 이미 한 번 막았으면 놓아줘야 함')
 
+# 도구 글: 사용자가 읽는 인자가 한국어인지, 질문은 하나인지
+for name, tool, inp, expect in [
+    ('한국어 recap', 'mcp__ccd_turn__wrap_up', {'recap': '빈 PR 머지를 막는 훅을 넣었어요. `check.py` 가 통과했고 CI 는 아직 돌고 있어요.', 'actions': [{'label': 'PR 머지'}]}, False),
+    ('영어 recap', 'mcp__ccd_turn__wrap_up', {'recap': 'Added the empty PR merge gate. check.py passes and CI is still running.'}, True),
+    ('짧은 영어 버튼', 'mcp__ccd_turn__wrap_up', {'recap': '고쳤어요.', 'actions': [{'label': 'Yes, fix 1'}]}, True),
+    ('한 낱말 영어 버튼', 'mcp__ccd_turn__wrap_up', {'recap': '고쳤어요.', 'actions': [{'label': 'OK'}]}, False),
+    ('한글 섞인 짧은 버튼', 'mcp__ccd_turn__wrap_up', {'recap': '고쳤어요.', 'ask': 'PR 을 머지할까요?', 'actions': [{'label': '1번 fix'}, {'action': 'commit'}]}, False),
+    ('빈 필드', 'mcp__ccd_turn__wrap_up', {}, False),
+    ('영어 작업 목록', 'mcp__ccd_turn__update_plan', {'items': [{'content': 'check.py 돌리기', 'status': 'pending'}, {'content': 'Push and watch CI', 'status': 'pending'}]}, True),
+    ('한국어 작업 목록', 'mcp__ccd_turn__update_plan', {'items': [{'content': 'hooks.json 에 등록', 'status': 'in_progress'}]}, False),
+    ('진행 표시만', 'mcp__ccd_turn__update_plan', {'advance': True}, False),
+    ('영어 캡션', 'SendUserFile', {'caption': 'Settings screen after the fix'}, True),
+    ('영어 명령 설명', 'Bash', {'command': 'git status', 'description': 'Show working tree status'}, True),
+    ('한국어 명령 설명', 'Bash', {'command': 'git status', 'description': '작업 트리 상태 보기'}, False),
+    ('설명 없는 명령', 'Bash', {'command': 'ls'}, False),
+    ('질문 하나', 'AskUserQuestion', {'questions': [{'question': '버튼 색은 어느 쪽이 좋아요?', 'header': '버튼 색', 'options': [{'label': '파랑', 'description': '지금 앱 색'}, {'label': '초록'}]}]}, False),
+    ('질문 둘', 'AskUserQuestion', {'questions': [{'question': '버튼 색은?', 'header': '색'}, {'question': '글꼴은?', 'header': '글꼴'}]}, True),
+    ('영어 선택지', 'AskUserQuestion', {'questions': [{'question': '어느 쪽으로 할까요?', 'header': '방식', 'options': [{'label': 'Keep both'}, {'label': '하나만'}]}]}, True),
+    ('다른 도구', 'Read', {'file_path': '/a/b'}, False),
+]:
+    if ('deny' in run('tool-text.py', {'tool_name': tool, 'tool_input': inp})) != expect:
+        fails.append(f'tool-text: {name}')
+
 for cmd, expect in [
     ('cd x && pytest -q | tail -3 && gh pr merge 12 --squash', True),
     ('pytest -q tests/ && git commit -m x', False),
@@ -38,23 +61,24 @@ for cmd, expect in [
 # 머지 관문: 가짜 gh 로 세 상황을 만든다
 import datetime, stat
 with tempfile.TemporaryDirectory() as t:
-    def fake_gh(checks_out, code, age_sec):
+    def fake_gh(checks_out, code, age_sec, files=1):
         created = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=age_sec)).strftime('%Y-%m-%dT%H:%M:%SZ')
         path = os.path.join(t, 'gh')
         open(path, 'w').write(f"""#!/bin/sh
-if [ "$2" = "view" ]; then echo '{{"createdAt":"{created}","headRefOid":"abc"}}'; exit 0; fi
+if [ "$2" = "view" ]; then echo '{{"createdAt":"{created}","headRefOid":"abc","files":{json.dumps([{"path": "a"}] * files)}}}'; exit 0; fi
 echo '{checks_out}'; exit {code}
 """)
         os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
     env = dict(os.environ, PATH=t + os.pathsep + os.environ['PATH'])
-    for name, out, code, age, expect in [
-        ('체크가 아직 안 붙은 새 PR', 'no checks reported on the branch', 1, 20, True),
-        ('도는 체크', 'test\tpending\t0', 8, 600, True),
-        ('실패한 체크', 'test\tfail\t1m', 1, 600, True),
-        ('모두 통과', 'test\tpass\t1m', 0, 600, False),
-        ('체크 없는 경로의 오래된 PR', 'no checks reported on the branch', 1, 600, False),
+    for name, out, code, age, files, expect in [
+        ('체크가 아직 안 붙은 새 PR', 'no checks reported on the branch', 1, 20, 1, True),
+        ('도는 체크', 'test\tpending\t0', 8, 600, 1, True),
+        ('실패한 체크', 'test\tfail\t1m', 1, 600, 1, True),
+        ('모두 통과', 'test\tpass\t1m', 0, 600, 1, False),
+        ('체크 없는 경로의 오래된 PR', 'no checks reported on the branch', 1, 600, 1, False),
+        ('바뀐 파일 0개', 'test\tpass\t1m', 0, 600, 0, True),
     ]:
-        fake_gh(out, code, age)
+        fake_gh(out, code, age, files)
         r = subprocess.run([sys.executable, '-I', os.path.join(hooks, 'guard-bash.py')], input=json.dumps({'tool_input': {'command': 'gh pr merge 42 --squash'}, 'cwd': t}), capture_output=True, text=True, env=env).stdout
         if ('deny' in r) != expect:
             fails.append(f'머지 관문: {name}')

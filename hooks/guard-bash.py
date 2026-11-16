@@ -14,13 +14,15 @@ def deny(why):
 
 
 def merge_gate(pr, cwd):
-    """머지 직전에 체크가 다 붙고 다 초록인지 본다. 「no checks reported」는 초록이 아니다(체크가 아직 안 붙었을 수 있다)."""
+    """머지 직전에 바뀐 파일이 있는지, 체크가 다 붙고 다 초록인지 본다. 「no checks reported」는 초록이 아니다(체크가 아직 안 붙었을 수 있다)."""
     import subprocess, datetime
     try:
-        info = json.loads(subprocess.run(["gh", "pr", "view", pr, "--json", "createdAt,headRefOid"], cwd=cwd, capture_output=True, text=True, timeout=10).stdout or "{}")
+        info = json.loads(subprocess.run(["gh", "pr", "view", pr, "--json", "createdAt,headRefOid,files"], cwd=cwd, capture_output=True, text=True, timeout=10).stdout or "{}")
         checks = subprocess.run(["gh", "pr", "checks", pr], cwd=cwd, capture_output=True, text=True, timeout=10)
     except Exception:
         return None
+    if "files" in info and not info["files"]:
+        return "이 PR 은 바뀐 파일이 0개다(이미 main 에 들어갔거나 커밋이 빠졌다). 머지하지 말고 gh pr view <번호> --json files,commits 로 무엇이 빠졌는지 보라."
     out = (checks.stdout + checks.stderr).lower()
     if "no checks reported" in out:
         created = info.get("createdAt")
