@@ -1,0 +1,23 @@
+---
+name: how
+description: "코드가 어떻게 동작하는지, 무엇을 어디에 둬야 하는지 설명한다. Use for \"how does X work\", code walkthroughs before changing something, placement / ownership / layering questions (\"where should this live\", \"which package owns this\", \"is this the right layer\"), subsystem architecture, runtime flow, onboarding mental models. 동기·이유는 /devkit:why. /devkit:how"
+disable-model-invocation: true
+---
+
+# How
+
+「X 는 어떻게 동작하나」에 코드베이스를 탐색해 답한다.
+
+범위가 모호하면 어떻게 해석했는지 한 줄 적고 바로 탐색한다. 사용자가 방향을 바꿀 수 있다. 질문에는 답만 한다. 코드를 바꾸지 않는다.
+
+## 1. 설명
+
+`Agent` 하나를 띄운다. `subagent_type: "Explore"`, `model: "sonnet"`. 탐색과 설명을 한 번에 맡긴다. 사용자 질문과 아래 브리프를 그대로 준다.
+
+> 시니어 엔지니어에게 줄 아키텍처 설명을 쓴다. 코드베이스를 탐색하고, 이 영역을 모르는 시니어가 읽고 나서 쓸 만한 머릿속 모델을 갖게 하는 설명을 쓴다. 그 사람이 이 영역에서 자신 있게 일을 시작할 수 있을 만큼 구조를 이해해야 한다. 읽기 전용이다. 파일을 고치지 마라. 설명은 한국어로 쓴다. 코드 이름·경로·명령은 원래 글자 그대로 둔다.
+
+질문이 여러 하위 시스템에 걸치고 판단이 많이 필요하면 `model: "opus"` 를 쓴다.
+
+## 2. 전달
+
+서브에이전트의 결과를 보여 준다. 대화 맥락을 덧붙이거나 읽기 쉽게 가볍게 다듬는 것은 된다. 크게 다시 쓰지 않는다.
