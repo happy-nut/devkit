@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-import json, re, sys
+import datetime, json, os, re, subprocess, sys
 
-d = json.load(sys.stdin)
-cmd = (d.get("tool_input") or {}).get("command", "")
 RULES = [
     (r"pytest[^\n;]*\|[^\n;]*&&[^\n]*(git\s+commit|gh\s+pr\s+merge)",
      "pytest 를 파이프(| tail 등)로 넘긴 뒤 && 로 커밋·머지하면 실패가 삼켜진다(실패한 테스트가 그대로 머지된 적이 있다). 테스트를 따로 돌려 결과 줄을 확인한 다음 커밋·머지를 따로 하라."),
@@ -12,8 +10,7 @@ def deny(why):
     sys.exit(0)
 
 
-def merge_gate(pr, cwd, repo=None):
-    import subprocess, datetime
+def merge_block_reason(pr, cwd, repo=None):
     sel = ["-R", repo] if repo else []
     try:
         info = json.loads(subprocess.run(["gh", "pr", "view", pr, *sel, "--json", "createdAt,headRefOid,files"], cwd=cwd, capture_output=True, text=True, timeout=10).stdout or "{}")
@@ -39,16 +36,21 @@ def merge_gate(pr, cwd, repo=None):
     return None
 
 
-m = re.search(r"\bgh\s+pr\s+merge\s+(\d+)(?![^\n;&|]*--auto)", cmd)
-if m:
-    import os
-    lead = re.match(r"\s*cd\s+(\S+)\s*&&", cmd)
-    cwd = os.path.join(d.get("cwd") or ".", os.path.expanduser(lead.group(1))) if lead else d.get("cwd")
-    repo = re.search(r"(?:-R|--repo)[ =](\S+)", cmd[m.start():].split("\n")[0])
-    why = merge_gate(m.group(1), cwd, repo.group(1) if repo else None)
-    if why:
-        deny(why)
+def main():
+    d = json.load(sys.stdin)
+    cmd = (d.get("tool_input") or {}).get("command", "")
+    m = re.search(r"\bgh\s+pr\s+merge\s+(\d+)(?![^\n;&|]*--auto)", cmd)
+    if m:
+        lead = re.match(r"\s*cd\s+(\S+)\s*&&", cmd)
+        cwd = os.path.join(d.get("cwd") or ".", os.path.expanduser(lead.group(1))) if lead else d.get("cwd")
+        repo = re.search(r"(?:-R|--repo)[ =](\S+)", cmd[m.start():].split("\n")[0])
+        why = merge_block_reason(m.group(1), cwd, repo.group(1) if repo else None)
+        if why:
+            deny(why)
+    for pat, why in RULES:
+        if re.search(pat, cmd):
+            deny(why)
 
-for pat, why in RULES:
-    if re.search(pat, cmd):
-        deny(why)
+
+if __name__ == "__main__":
+    main()

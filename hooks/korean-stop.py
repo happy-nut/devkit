@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Stop 훅: 사용자에게 한 마지막 말이 한국어가 아니면 한 번 되돌린다. 판정은 korean.py."""
 import json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

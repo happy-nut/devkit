@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""PreToolUse 훅: 사용자가 읽는 도구 인자(요약·작업 목록·버튼·질문·명령 설명)가 한국어가 아니면 막는다.
-AskUserQuestion 은 질문이 둘 이상이어도 막는다. 판정은 korean.py."""
 import json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

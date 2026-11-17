@@ -9,10 +9,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      # plugin.json 의 version 이 유일한 진실의 원천이다. 거기서 바로 태그·릴리즈를 내면
-      # "판은 올렸는데 릴리즈는 깜빡했다"가 구조적으로 일어날 수 없다(사람이나 에이전트가
-      # 기억해야 하는 수동 단계가 없다). 이미 있는 판이면 조용히 건너뛴다.
-      - run: |
+      - name: plugin.json 판으로 릴리즈 내기
+        run: |
           v=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
           tag="v$v"
           if gh release view "$tag" >/dev/null 2>&1; then
