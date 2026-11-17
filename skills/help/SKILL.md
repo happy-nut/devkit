@@ -45,6 +45,7 @@ disable-model-invocation: true
 |---|---|
 | `korean-stop.py` (Stop) | 사용자에게 한 마지막 말이 한국어가 아니면 한 번 되돌려 한국어로 다시 쓰게 한다(코드·경로·짧은 줄은 제외) |
 | `open-plan-stop.py` (Stop) | 작업 목록에 끝나지 않은 단계가 남았는데 `wrap_up` 없이 턴을 닫으면 한 번 되돌린다(기다리는 백그라운드 작업이 있으면 통과) |
+| `idea-no-build.py` (PreToolUse, Edit·Write·Bash) | `/dev:idea` 세션에서 작업 폴더 편집과 커밋·PR 을 막는다(구현은 `/dev:mode` 로) |
 | `guard-bash.py` (PreToolUse, Bash) | 바뀐 파일이 0개이거나 체크가 아직 안 붙었거나 돌고 있거나 실패한 PR 의 `gh pr merge` 를 막는다. `pytest … \| tail && 커밋·머지` 처럼 실패를 삼키는 줄도 막는다 |
 | `tool-text.py` (PreToolUse, 사용자가 읽는 도구 글) | 작업 요약·작업 목록·버튼(`wrap_up`·`update_plan`), 파일 캡션, `AskUserQuestion` 질문·선택지, Bash 설명이 한국어가 아니면 막는다(판정은 `korean-stop.py` 와 같다. 짧은 글은 한글 낱말 없이 두 낱말 이상일 때만). `AskUserQuestion` 질문이 둘 이상이어도 막는다 |
 
