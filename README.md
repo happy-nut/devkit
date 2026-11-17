@@ -9,7 +9,7 @@ Lauren Tan 의 강연 「All Code Is Slop (Except Mine)」(2026-11)과 그가 �
 Claude Code 가 설치되어 있어야 한다. 훅은 `python3` 으로 돌고, PR 머지 검사는 `gh`(GitHub CLI)를 쓴다.
 
 ```bash
-claude plugin marketplace add happy-nut/devkit
+claude plugin marketplace add happy-nut/kit
 claude plugin install dev@kit
 ```
 
