@@ -26,6 +26,30 @@ with tempfile.TemporaryDirectory() as t:
     if run('korean-stop.py', {'transcript_path': p, 'stop_hook_active': True}):
         fails.append('korean-stop: 이미 한 번 막았으면 놓아줘야 함')
 
+    def tool(name, inp, tid='toolu_x'):
+        return {'type': 'assistant', 'message': {'content': [{'type': 'tool_use', 'id': tid, 'name': name, 'input': inp}]}}
+    plan = tool('mcp__ccd_turn__update_plan', {'items': [{'content': '원인 찾기', 'status': 'in_progress'}, {'content': '고치기', 'status': 'pending'}]})
+    advance = tool('mcp__ccd_turn__update_plan', {'advance': True})
+    wrap = tool('mcp__ccd_turn__wrap_up', {'recap': '고쳤어요.'})
+    bg = tool('Bash', {'command': 'sleep 99', 'run_in_background': True}, 'toolu_bg1')
+    note = {'type': 'user', 'message': {'content': '<task-notification>\n<tool-use-id>toolu_bg1</tool-use-id>\n</task-notification>'}}
+    side = dict(plan, isSidechain=True)
+    for name, entries, expect in [
+        ('미완료를 두고 멈춤', [plan, advance], True),
+        ('다 끝내고 wrap_up', [plan, advance, advance, wrap], False),
+        ('미완료여도 wrap_up 으로 마무리', [plan, wrap], False),
+        ('백그라운드 작업을 기다림', [plan, bg], False),
+        ('기다리던 작업이 끝났는데 멈춤', [plan, bg, note], True),
+        ('작업 목록 없음', [], False),
+        ('서브에이전트의 목록', [side], False),
+        ('TodoWrite 미완료', [tool('TodoWrite', {'todos': [{'content': 'a', 'status': 'pending'}]})], True),
+    ]:
+        open(p, 'w').write(''.join(json.dumps(e) + '\n' for e in entries))
+        if ('block' in run('open-plan-stop.py', {'transcript_path': p})) != expect:
+            fails.append(f'open-plan-stop: {name}')
+    if run('open-plan-stop.py', {'transcript_path': p, 'stop_hook_active': True}):
+        fails.append('open-plan-stop: 이미 한 번 막았으면 놓아줘야 함')
+
 for name, tool, inp, expect in [
     ('한국어 recap', 'mcp__ccd_turn__wrap_up', {'recap': '빈 PR 머지를 막는 훅을 넣었어요. `check.py` 가 통과했고 CI 는 아직 돌고 있어요.', 'actions': [{'label': 'PR 머지'}]}, False),
     ('영어 recap', 'mcp__ccd_turn__wrap_up', {'recap': 'Added the empty PR merge gate. check.py passes and CI is still running.'}, True),
