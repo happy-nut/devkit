@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""범위 안 주석을 덩어리 단위로 센다. 리뷰어가 하나도 빠뜨리지 않았는지 맞춰 보는 기준이다.
-
-    python3 count.py <파일·폴더 ...>          # 파일마다 덩어리 수와 합계
-    python3 count.py --list <파일·폴더 ...>   # 덩어리마다 「파일:줄  첫머리」
-    python3 count.py --self-test
-
-덩어리: 이어진 주석 줄 묶음 하나, 코드 뒤에 붙은 주석 하나, docstring 하나, /* */ 하나.
-"""
+import argparse
 import ast
 import io
 import os
@@ -114,14 +107,18 @@ def files(args):
 
 
 def main(argv):
-    if '--self-test' in argv:
+    ap = argparse.ArgumentParser(description='범위 안 주석을 덩어리(이어진 주석 줄 묶음·코드 뒤 주석·docstring·/* */) 단위로 센다.')
+    ap.add_argument('paths', nargs='*', help='파일이나 폴더')
+    ap.add_argument('--list', action='store_true', help='덩어리마다 「파일:줄  첫머리」를 찍는다')
+    ap.add_argument('--self-test', action='store_true', help='셈 규칙 자체 시험')
+    args = ap.parse_args(argv)
+    if args.self_test:
         return self_test()
-    listing = '--list' in argv
     total = 0
-    for p in files([a for a in argv if not a.startswith('--')]):
+    for p in files(args.paths):
         bs = blocks(p)
         total += len(bs)
-        if listing:
+        if args.list:
             for ln, head in bs:
                 print(f'{p}:{ln}  {head[:80]}')
         elif bs:

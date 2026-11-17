@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""PreToolUse(Bash) 훅: 사고를 낸 적 있는 명령 모양을 막는다."""
 import json, re, sys
 
 d = json.load(sys.stdin)

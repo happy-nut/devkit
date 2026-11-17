@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""PreToolUse(Edit·Write·MultiEdit) 훅: 코드 파일에 새 주석을 넣는 편집을 한 번 막는다.
-기준은 /dev:no-comments 의 예외 목록이다. 예외라고 판단해 같은 편집을 다시 보내면 통과한다."""
 import collections, hashlib, json, os, re, sys
 
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,15 +32,23 @@ for old, new in pairs:
 if not added:
     sys.exit(0)
 
-key = hashlib.sha1(json.dumps([path, sorted(added)], ensure_ascii=False).encode()).hexdigest()
-try:
-    seen = set(json.load(open(STATE)))
-except (OSError, ValueError):
-    seen = set()
-if key in seen:
+
+
+def second_identical_attempt(path, added):
+    key = hashlib.sha1(json.dumps([path, sorted(added)], ensure_ascii=False).encode()).hexdigest()
+    try:
+        seen = set(json.load(open(STATE)))
+    except (OSError, ValueError):
+        seen = set()
+    if key in seen:
+        return True
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    json.dump(sorted(seen | {key})[-500:], open(STATE, 'w'))
+    return False
+
+
+if second_identical_attempt(path, added):
     sys.exit(0)
-os.makedirs(os.path.dirname(STATE), exist_ok=True)
-json.dump(sorted(seen | {key})[-500:], open(STATE, 'w'))
 
 lines = '\n'.join(f'  - {h[:90]}' for h in added[:8])
 why = (f'새 주석 {len(added)}개를 넣으려 한다:\n{lines}\n'

@@ -1,4 +1,3 @@
-"""devkit 훅 시험: 막아야 할 것은 막고, 막지 말아야 할 것은 통과하는지. check.py 가 부른다."""
 import json, os, subprocess, sys, tempfile
 
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
