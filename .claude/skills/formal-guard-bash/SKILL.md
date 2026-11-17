@@ -34,4 +34,4 @@ python3 .claude/skills/formal-guard-bash/check_merge_gate.py
 
 ## 동기화 커밋
 
-`6ce0281e7e1020bab8802b5008840c2c5019f87a`. 이 커밋에서 `hooks/guard-bash.py` 를 읽고 위 모델을 맞췄다. 그 뒤 `hooks/guard-bash.py` 가 바뀌면(RULES 추가가 아니라 `merge_block_reason` 자체가 바뀌면) 이 스킬이 낡은 것이다. `check_merge_gate.py` 를 다시 돌려 새 코드를 설명하는지 보고, 확인한 새 커밋으로 이 줄을 옮긴다. `blocked` 면 옮기지 않는다.
+`48ed0d580f1690e2589bfdb0bfd9d15f380774eb`. 이 커밋에서 `hooks/guard-bash.py` 를 읽고 위 모델을 맞췄다. 그 뒤 `hooks/guard-bash.py` 가 바뀌면(RULES 추가가 아니라 `merge_block_reason` 자체가 바뀌면) 이 스킬이 낡은 것이다. `check_merge_gate.py` 를 다시 돌려 새 코드를 설명하는지 보고, 확인한 새 커밋으로 이 줄을 옮긴다. `blocked` 면 옮기지 않는다.
