@@ -1,6 +1,6 @@
 ---
 name: featuremap
-description: "프로젝트의 기능 지도(.claude/skills/verify-<앱>/features)를 커버리지가 붙은 인터랙티브 HTML 한 장으로 만든다. 하위 기능마다 자동 검증·방법만·없음을 가리고, 코드에서 뽑은 사용자 진입점이 지도에 들었는지 잰다. Use for /dev:featuremap, \"feature map html\", \"show the feature map\", \"feature map coverage\"."
+description: "프로젝트의 기능 지도(.claude/skills/verify-<앱>/features)를 그래프로 보는 인터랙티브 HTML 한 장으로 만든다. 기능 이름은 영어(에이전트와 대화할 때 부르는 이름), 설명은 한국어. 하위 기능마다 자동 검증·방법만·없음을 가리고, 코드에서 뽑은 사용자 진입점이 지도에 들었는지 잰다. Use for /dev:featuremap, \"feature map html\", \"show the feature map\", \"feature map coverage\"."
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,15 @@ disable-model-invocation: true
 
 `/dev:verify-setup` 이 만든 기능 지도를 사람이 한눈에 보는 HTML 한 장으로 만든다. 지도는 에이전트가 읽는 글이라 길고, 어디가 비었는지는 글만 봐서는 안 보인다. 이 스킬은 빈 곳을 숫자와 색으로 드러낸다.
 
-결과물은 파일 하나다. 외부 스크립트·글꼴 없이 오프라인으로 열린다. 넓은 화면은 두 칸, 휴대폰은 한 칸으로 쌓인다.
+결과물은 파일 하나다. 외부 스크립트·글꼴 없이 오프라인으로 열린다. 첫 화면은 방사형 그래프다. 가운데에 앱, 첫 고리에 기능, 바깥 고리에 하위 기능을 상태 색으로 놓고, 지도 밖 진입점은 점선 노드 「Unmapped」 하나로 모은다. 노드를 누르면 패널(휴대폰은 아래 시트)에 영어 이름과 복사 단추, 한국어 설명, 판정과 근거가 뜬다. 목록·진입점·빈칸 탭도 있다.
+
+## 이름과 설명
+
+기능 이름은 사람과 에이전트가 같은 것을 가리키는 낱말이다. 사용자는 HTML 에서 `CMP-3 branch tip` 을 복사해 「CMP-3 branch tip 고쳐」 처럼 그대로 말한다. 그래서 이름과 설명을 나눈다.
+
+- **이름은 영어.** `<ID> <짧은 영어 이름>` 으로 부른다. 이름은 지도 원문의 낱말에서 따온다(`**branch tip**`, `--staged`, `find usages`). 새로 지어내지 않는다. 지어낸 이름은 에이전트가 지도와 코드에서 찾지 못한다. 2~4 낱말, 한글 없음.
+- **설명은 한국어.** 사람이 읽는 한 문장. 그 기능이 사용자에게 무엇을 해 주는지 쓴다. 키나 플래그는 원문 그대로 둔다.
+- 기능 ID 는 H1 이 대문자 ID 와 대시로 시작하면(`CMP`, 대시, `choosing what to compare`) 그 ID 를, 아니면 파일 이름을 쓴다.
 
 ## 무엇을 재나
 
@@ -35,17 +43,23 @@ Driving 글머리에 ID 가 없으면 방법이 적혀 있어도 「없음」으
     {"id": "--staged", "label": "kakapo --staged", "group": "CLI 인자", "where": "src/cli-args.ts:26", "match": ["--staged"]}]
    ```
    `match` 는 기능 파일에 적힐 글자 그대로다(키 표기, 플래그, 라우트, 버튼 이름). `where` 는 그 진입점이 정의된 `파일:줄` 이다.
-3. **HTML 을 만든다.**
-   ```bash
-   python3 <이 스킬>/scripts/featuremap.py <저장소>/.claude/skills/verify-<앱>/features --repo <저장소> --surfaces <scratch>/surfaces.json --out <scratch>/<앱>-featuremap.html
+3. **이름 파일을 쓴다.** 기능 파일을 모두 읽고, 기능 ID 와 하위 기능 ID 마다 영어 이름과 한국어 설명을 scratch 폴더 JSON 에 쓴다(위 「이름과 설명」). 저장소 안에 두지 않는다.
+   ```json
+   {"CMP": {"name": "Choose what to compare", "desc": "변경을 어느 두 지점 사이로 볼지 고른다."},
+    "CMP-3": {"name": "branch tip", "desc": "⌥T. 갈림점으로 줄이지 않고 그 ref 의 끝과 바로 비교한다."}}
    ```
-   표준 출력 첫 줄은 요약 JSON 이다. 이어서 「방법 없음 <기능> <ID>」, 「지도에 없는 진입점 …」 줄이 나온다. HTML 은 저장소에 커밋하지 않는다. 매번 지도에서 다시 만든다.
-4. **띄워 본다.** 브라우저로 연다. 파일 경로로 열리지 않으면 그 폴더를 `python3 -m http.server` 로 띄운다. 기능 탭, 상태 필터, 진입점 탭의 「지도에 없는 것만」, 빈칸 탭, 휴대폰 너비를 하나씩 눌러 보고 화면마다 한 장씩 찍는다. 숫자가 표준 출력의 요약과 같은지 본다.
-5. **이상한 숫자를 판다.** 자동 검증으로 잡힌 근거 줄을 몇 개 열어 정말 그 하위 기능을 돌리는지 본다. 지도에 든 진입점 가운데 짧은 키(`Tab`, `F1`)는 엉뚱한 글에 걸렸을 수 있다. 틀린 판정을 찾으면 스크립트를 고치고 `--self-test` 에 그 경우를 더한다.
+4. **HTML 을 만든다.**
+   ```bash
+   python3 <이 스킬>/scripts/featuremap.py <저장소>/.claude/skills/verify-<앱>/features --repo <저장소> --surfaces <scratch>/surfaces.json --names <scratch>/names.json --out <scratch>/<앱>-featuremap.html
+   ```
+   표준 출력 첫 줄은 요약 JSON 이다. `naming_problems` 가 0 이 아니면 「이름에 한글 …」, 「한국어 설명 없음 …」 줄을 보고 이름 파일을 고쳐 0 이 될 때까지 다시 만든다. 이어서 「방법 없음 <기능> <ID>」, 「지도에 없는 진입점 …」 줄이 나온다. HTML 은 저장소에 커밋하지 않는다. 매번 지도에서 다시 만든다.
+5. **띄워 본다.** 브라우저로 연다. 파일 경로로 열리지 않으면 그 폴더를 `python3 -m http.server` 로 띄운다. 그래프 전체, 기능 노드, 하위 기능 노드, Unmapped 노드, 검색, 목록 탭, 휴대폰 너비, 어두운 화면을 하나씩 눌러 보고 화면마다 한 장씩 찍는다. 숫자가 표준 출력의 요약과 같은지 본다.
+6. **이상한 숫자를 판다.** 자동 검증으로 잡힌 근거 줄을 몇 개 열어 정말 그 하위 기능을 돌리는지 본다. 지도에 든 진입점 가운데 짧은 키(`Tab`, `F1`)는 엉뚱한 글에 걸렸을 수 있다. 틀린 판정을 찾으면 스크립트를 고치고 `--self-test` 에 그 경우를 더한다.
 
 ## 보고
 
 - HTML 파일을 사용자에게 보낸다(파일 보내기 도구가 있으면 그것으로). 경로만 적지 않는다.
+- 보고에서 기능을 부를 때도 `CMP-3 branch tip` 처럼 HTML 과 같은 영어 이름을 쓴다.
 - 첫 줄에 세 숫자를 쓴다. 자동 검증 a/n, 검증 방법이 있는 하위 기능 b/n, 지도에 든 진입점 c/m.
 - 「없음」 하위 기능과 지도에 없는 진입점은 기능·묶음별로 세어 한 줄씩. 다 늘어놓지 않는다. 다 보려면 HTML 을 본다.
 - 다음에 할 일은 지도를 고치는 쪽으로 쓴다. 「방법만」 하위 기능에 드라이브 스크립트를 붙이면 자동 검증이 되고, 지도에 없는 진입점은 `/dev:verify-setup` 의 「유지」 절로 기능 파일에 넣는다.

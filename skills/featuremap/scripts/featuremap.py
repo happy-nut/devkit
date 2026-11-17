@@ -5,6 +5,8 @@ RUNNABLE = re.compile(r"\b(node|npm|npx|pnpm|yarn|bun|deno|python3?|pytest|bash|
 GAP_HEADINGS = re.compile(r"^##\s+(Not mapped|지도에 없|아직 지도)", re.I)
 SECTION = re.compile(r"^##\s+(.+?)\s*$", re.M)
 SKIP = re.compile(r"(^|/)(node_modules|dist|build|vendor|\.git)/")
+HANGUL = re.compile(r"[가-힣]")
+FEATURE_ID = re.compile(r"^([A-Z][A-Z0-9_-]*)\s+[\u2014\u2013-]+\s+(.+)$")
 
 
 def split_sections(text):
@@ -90,14 +92,14 @@ def markdown(text):
     return "\n".join(out)
 
 
-def repo_files(repo, features_dir):
+def repo_files(repo, features_dir, ignore=()):
     r = subprocess.run(["git", "-C", repo, "ls-files", "-co", "--exclude-standard"], capture_output=True, text=True)
     paths = r.stdout.splitlines() if r.returncode == 0 else [
         os.path.relpath(os.path.join(d, f), repo) for d, _, fs in os.walk(repo) for f in fs]
     feat = os.path.relpath(os.path.realpath(features_dir), os.path.realpath(repo))
     for p in paths:
         full = os.path.join(repo, p)
-        if SKIP.search(p) or p.startswith(feat + os.sep) or not os.path.isfile(full) or os.path.getsize(full) > 1_000_000:
+        if SKIP.search(p) or p.startswith(feat + os.sep) or os.path.realpath(full) in ignore or not os.path.isfile(full) or os.path.getsize(full) > 1_000_000:
             continue
         try:
             yield p, open(full, encoding="utf-8").read().splitlines()
@@ -119,7 +121,7 @@ def proofs_for(ids, files):
     return found
 
 
-def read_map(features_dir, repo):
+def read_map(features_dir, repo, ignore=()):
     readme = os.path.join(features_dir, "README.md")
     index_text = open(readme, encoding="utf-8").read() if os.path.exists(readme) else ""
     _, index_sections = split_sections(index_text)
@@ -139,11 +141,13 @@ def read_map(features_dir, repo):
         for b in bullets(subs_body):
             sid = token(b)
             if sid:
-                subs.append({"id": sid, "html": inline(b), "method": re.search(r"(?<![\w-])" + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
-        features.append({"key": name[:-3], "file": name, "title": h1.group(1).strip() if h1 else name[:-3],
+                subs.append({"id": sid, "name": default_name(b, sid), "html": inline(b), "method": re.search(r"(?<![\w-])" + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
+        title_text = h1.group(1).strip() if h1 else name[:-3]
+        fid = FEATURE_ID.match(title_text)
+        features.append({"key": name[:-3], "id": fid.group(1) if fid else name[:-3], "name": (fid.group(2) if fid else title_text).strip(), "file": name, "title": title_text,
                          "purpose": markdown(purpose), "subs": subs, "text": text,
                          "sections": [{"name": k, "html": markdown(v)} for k, v in sections.items()]})
-    files = list(repo_files(repo, features_dir))
+    files = list(repo_files(repo, features_dir, ignore))
     proofs = proofs_for([s["id"] for f in features for s in f["subs"]], files)
     for f in features:
         for s in f["subs"]:
@@ -152,7 +156,30 @@ def read_map(features_dir, repo):
     return {"title": title.group(1).strip() if title else os.path.basename(repo), "features": features, "gaps": gaps}
 
 
+def default_name(bullet, sid):
+    rest = re.sub(r"^`[^`]+`|^\*\*[^*]+\*\*", "", bullet).strip()
+    bold = re.match(r"\*\*(.+?)\*\*", rest)
+    name = bold.group(1) if bold else re.split(r"\s+[\u2014\u2013]\s+|[.。]", rest)[0]
+    return re.sub(r"[`*]", "", name).strip()[:60] or sid
+
+
+def apply_names(data, names):
+    problems = []
+    for f in data["features"]:
+        for item in [f] + f["subs"]:
+            given = names.get(item["id"]) or (names.get(f["key"]) if item is f else None) or {}
+            item["name"] = given.get("name") or item["name"]
+            item["desc"] = given.get("desc", "")
+            if HANGUL.search(item["name"]):
+                problems.append(f"이름에 한글 {item['id']}: {item['name']}")
+            if not HANGUL.search(item["desc"]):
+                problems.append(f"한국어 설명 없음 {item['id']}")
+    return problems
+
+
 def mentions(text, needle):
+    if re.fullmatch(r"[A-Za-z0-9]{1,2}", needle or ""):
+        return f"`{needle}`" in text
     return bool(needle) and re.search(r"(?<![\w⌘⌥⇧⌃])" + re.escape(needle) + r"(?!\w)", text) is not None
 
 
@@ -167,11 +194,13 @@ def summary(data):
     count = {k: sum(s["status"] == k for s in subs) for k in ("auto", "method", "none")}
     surf = data["surfaces"]
     return {"features": len(data["features"]), "subs": len(subs), **count,
-            "surfaces": len(surf), "mapped": sum(bool(s["mapped_in"]) for s in surf), "gaps": len(data["gaps"])}
+            "surfaces": len(surf), "mapped": sum(bool(s["mapped_in"]) for s in surf), "gaps": len(data["gaps"]),
+            "naming_problems": len(data["problems"])}
 
 
-def build(features_dir, repo, surfaces_path=None):
-    data = read_map(features_dir, repo)
+def build(features_dir, repo, surfaces_path=None, names_path=None):
+    data = read_map(features_dir, repo, {os.path.realpath(p) for p in (surfaces_path, names_path) if p})
+    data["problems"] = apply_names(data, json.load(open(names_path, encoding="utf-8")) if names_path else {})
     surfaces = json.load(open(surfaces_path, encoding="utf-8")) if surfaces_path else []
     data["surfaces"] = match_surfaces(surfaces, data["features"])
     for f in data["features"]:
@@ -202,13 +231,22 @@ def self_test():
             f.write("\n## Not mapped yet\n\n- 내보내기 메뉴,\n  설정 화면\n- 휴지통\n")
         open(os.path.join(t, "drive.sh"), "w").write("node drive.mjs create-open\n")
         surf = os.path.join(t, "surfaces.json")
-        json.dump([{"id": "new", "label": "새 노트", "match": ["New note"]}, {"id": "export", "label": "내보내기", "match": ["Export all"]}, {"id": "disc", "label": "앞부분만 겹침", "match": ["Disc"]}], open(surf, "w"))
-        data = build(feat, t, surf)
+        json.dump([{"id": "new", "label": "새 노트", "match": ["New note"]}, {"id": "export", "label": "내보내기", "match": ["Export all"]}, {"id": "disc", "label": "앞부분만 겹침", "match": ["Disc"]}, {"id": "to", "label": "짧은 키", "match": ["to"]}], open(surf, "w"))
+        names = os.path.join(t, "names.json")
+        json.dump({"create-note": {"name": "Create a note", "desc": "브라우저와 CLI 로 노트를 만든다."},
+                   "create-open": {"name": "open editor", "desc": "새 노트 편집기를 연다."},
+                   "create-save": {"name": "저장", "desc": "제목과 본문을 저장한다."}}, open(names, "w"), ensure_ascii=False)
+        data = build(feat, t, surf, names)
+        named = {s["id"]: s for f in data["features"] for s in [f] + f["subs"]}
+        assert named["create-open"]["name"] == "open editor" and named["create-open"]["desc"].startswith("새 노트"), "이름 파일이 영어 이름과 한국어 설명을 준다"
+        assert named["create-note"]["name"] == "Create a note", "기능도 파일 이름으로 이름을 받는다"
+        assert "이름에 한글 create-save: 저장" in data["problems"], "이름에 한글이 있으면 잡는다"
+        assert "한국어 설명 없음 create-cancel" in data["problems"], "한국어 설명이 빠지면 잡는다"
         status = {s["id"]: s["status"] for f in data["features"] for s in f["subs"]}
         assert status["create-open"] == "auto", "실행 파일이 ID 를 가리키면 자동 검증"
         assert status["create-save"] == "method", "Driving 글머리에 ID 가 있으면 방법만"
         assert status["create-cancel"] == "none", "어디에도 없으면 없음"
-        assert [s["mapped_in"] for s in data["surfaces"]] == [["create-note"], [], []], "진입점은 기능 파일 글에 낱말째 있어야 맞는다(Disc 는 Discard 에 걸리지 않는다)"
+        assert [s["mapped_in"] for s in data["surfaces"]] == [["create-note"], [], [], []], "진입점은 기능 파일 글에 낱말째 있어야 맞는다(Disc 는 Discard 에, 짧은 키 to 는 백틱 없는 to 에 걸리지 않는다)"
         assert data["gaps"] == ["내보내기 메뉴, 설정 화면", "휴지통"], "빈칸 글머리는 이어지는 줄까지 하나로 읽는다"
         page = render(data)
         assert "create-cancel" in page and "__DATA__" not in page, "HTML 에 데이터가 들어간다"
@@ -221,6 +259,7 @@ def main(argv):
     ap.add_argument("features", nargs="?", help="기능 지도 폴더 (보통 .claude/skills/verify-<앱>/features)")
     ap.add_argument("--repo", default=".", help="저장소 루트")
     ap.add_argument("--surfaces", help="코드에서 뽑은 사용자 진입점 JSON")
+    ap.add_argument("--names", help="기능·하위 기능 ID 마다 영어 이름(name)과 한국어 설명(desc)을 준 JSON")
     ap.add_argument("--out", help="쓸 HTML 경로")
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args(argv)
@@ -228,11 +267,13 @@ def main(argv):
         return self_test()
     if not a.features:
         ap.error("기능 지도 폴더를 준다")
-    data = build(a.features, a.repo, a.surfaces)
+    data = build(a.features, a.repo, a.surfaces, a.names)
     if a.out:
         open(a.out, "w", encoding="utf-8").write(render(data))
     s = data["summary"]
     print(json.dumps(s, ensure_ascii=False))
+    for line in data["problems"]:
+        print(line)
     for f in data["features"]:
         for sub in f["subs"]:
             if sub["status"] == "none":
