@@ -56,7 +56,7 @@ skills/mode/principles.md        원칙 25개. 한 파일에 절마다 "## 영�
 skills/mode/playbooks/           플레이북 23개
 skills/mode/references/          플레이북이 읽는 참고 문서
 skills/mode/scripts/             플레이북이 돌리는 스크립트
-skills/<이름>/SKILL.md           /dev:<이름> 으로 부르는 스킬. mode 를 넣어 25개
+skills/<이름>/SKILL.md           /dev:<이름> 으로 부르는 스킬. mode 를 넣어 26개
 agents/                          서브에이전트 dev:worker, dev:comment-reviewer
 hooks/                           설치하면 켜지는 훅
 scripts/check.py                 저장소 검사
@@ -88,6 +88,7 @@ docs/authoring.md                이 저장소를 고치는 규칙
 
 | 스킬 | 하는 일 |
 |---|---|
+| `/dev:idea` | 원하는 이상을 듣고 현재를 조사해 갭을 문제로 정하고, MECE 로직 트리로 임팩트가 가장 큰 현실적 문제 하나를 고른다 |
 | `/dev:mode` | 플레이북을 고르고 단계대로 일한다 |
 | `/dev:design` | 설계안 여러 개를 병렬로 그리고, 하나를 골라 다른 안의 좋은 점을 붙인다 |
 | `/dev:swarm` | 일을 독립된 조각으로 나눠 병렬로 풀고, 결과를 PASS, ISSUES, BLOCKED 로 모은다 |
