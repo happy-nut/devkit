@@ -142,6 +142,60 @@ with tempfile.TemporaryDirectory() as t:
         if gate(payload) != expect:
             fails.append(f'새 주석 관문: {name}')
 
+def stop_scripts():
+    spec = json.load(open(os.path.join(hooks, 'hooks.json')))
+    return [h['command'].split('/')[-1] for g in spec['hooks']['Stop'] for h in g['hooks']]
+
+fixtures = os.path.join(root, 'scripts', 'fixtures', 'correction')
+with tempfile.TemporaryDirectory() as t:
+    home = os.path.join(t, 'home')
+    os.makedirs(home)
+    clean = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+    def git(repo, *args, when=None):
+        env = dict(clean, HOME=home, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@t', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@t')
+        if when:
+            env.update(GIT_AUTHOR_DATE=when, GIT_COMMITTER_DATE=when)
+        subprocess.run(['git', '-C', repo, *args], check=True, capture_output=True, env=env)
+    def stop(entries, commit=(), dirty=(), before=(), active=False):
+        repo = tempfile.mkdtemp(dir=t)
+        git(repo, 'init', '-q')
+        at = datetime.datetime.fromisoformat(entries[0]['timestamp'].replace('Z', '+00:00'))
+        for files, when in ((before, at - datetime.timedelta(days=1)), (commit, at + datetime.timedelta(minutes=1))):
+            if files:
+                for f in files:
+                    os.makedirs(os.path.dirname(os.path.join(repo, f)) or repo, exist_ok=True)
+                    open(os.path.join(repo, f), 'w').write('x\n')
+                git(repo, 'add', '-A')
+                git(repo, 'commit', '-qm', 'x', when=when.isoformat())
+        for f in dirty:
+            open(os.path.join(repo, f), 'w').write('x\n')
+        tx = os.path.join(repo, '..', os.path.basename(repo) + '.jsonl')
+        open(tx, 'w').write(''.join(json.dumps(e, ensure_ascii=False) + '\n' for e in entries))
+        payload = {'transcript_path': tx, 'cwd': repo, 'stop_hook_active': active}
+        outs = [subprocess.run([sys.executable, '-I', os.path.join(hooks, s)], input=json.dumps(payload), capture_output=True, text=True, env=dict(clean, HOME='/Users/u')).stdout for s in stop_scripts()]
+        return next((json.loads(o)['reason'] for o in outs if '교정' in o and 'block' in o), None)
+    def load(name):
+        return [json.loads(l) for l in open(os.path.join(fixtures, name + '.jsonl'))]
+    def said(text):
+        return {'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': text}]}}
+    leak = load('release-memory-only')
+    for name, entries, kw, expect in [
+        ('샌 교정: 릴리스는 말할 때만, 메모리만 바뀜', leak, {}, True),
+        ('장치로 남음: 검증 없이 커밋, commit-msg 관문', load('verify-commit-gate'), {'commit': ['.githooks/commit-msg', '.claude/skills/verify-app/verify.sh', 'CLAUDE.md']}, False),
+        ('장치로 남음: 재발한 카드, 회귀 테스트', load('recurring-card-test'), {'commit': ['fill.go', 'serve.go', 'need_revive_test.go', 'blocked_test.go']}, False),
+        ('장치로 남음: 문서 인용 검사 스크립트', load('citation-check'), {'commit': ['scripts/check-citations.mjs']}, False),
+        ('커밋 안 한 테스트 파일도 장치', leak, {'dirty': ['release_test.go']}, False),
+        ('턴 전에 있던 검사는 이번 장치가 아님', leak, {'before': ['scripts/check.py'], 'commit': ['README.md']}, True),
+        ('장치화 불가 이유를 적음', leak + [said('판단이라 장치화 불가: 언제 릴리스할지는 사람이 그때 정하는 일이다.')], {}, False),
+        ('교정 아닌 메시지', [dict(leak[0], message={'role': 'user', 'content': '릴리스 노트도 같이 써 줘'})] + leak[1:], {}, False),
+        ('한 번 되돌렸으면 놓아줌', leak, {'active': True}, False),
+    ]:
+        reason = stop(entries, **kw)
+        if bool(reason) != expect:
+            fails.append(f'correction-stop: {name} (되돌림 {"있음" if reason else "없음"})')
+        elif reason and 'SHOW_REASON' in os.environ:
+            print(f'{name}\n  되돌림: {reason}')
+
 if fails:
     sys.exit('훅 시험 실패:\n' + '\n'.join(fails))
 print('훅 시험 OK')
