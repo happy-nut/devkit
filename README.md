@@ -145,6 +145,7 @@ docs/authoring.md                이 저장소를 고치는 규칙
 | `hooks/korean-stop.py` (Stop) | 사용자에게 한 마지막 말이 한국어가 아니면 한 번 되돌려 다시 쓰게 한다. 코드, 경로, 짧은 줄은 세지 않는다 |
 | `hooks/open-plan-stop.py` (Stop) | 작업 목록(`update_plan`, `TodoWrite`)에 끝나지 않은 단계가 남았는데 `wrap_up` 없이 턴을 닫으면 한 번 되돌린다. 기다리는 백그라운드 작업이 있으면 통과한다 |
 | `hooks/guard-bash.py` (PreToolUse, Bash) | 바뀐 파일이 0개인 PR, 체크가 아직 안 붙었거나 돌고 있거나 실패한 PR 의 `gh pr merge` 를 막는다. 테스트 출력을 `tail` 같은 파이프로 넘긴 뒤 `&&` 로 커밋이나 머지를 잇는 명령도 막는다. 그런 명령에서는 테스트 실패가 묻힌다 |
+| `hooks/idea-no-build.py` (PreToolUse, Edit·Write·Bash) | 사람이 마지막으로 부른 kit 명령이 `/dev:idea` 인 세션에서 작업 폴더 파일 편집과 커밋·푸시·PR 을 막는다. `/tmp`·스크래치패드의 세기 스크립트는 통과한다. 구현은 `/dev:mode` 로 한다 |
 | `hooks/no-new-comments.py` (PreToolUse, Edit·Write) | 코드 파일에 새 주석을 넣는 편집을 한 번 막는다. 같은 편집을 다시 하면 통과한다 |
 | `hooks/tool-text.py` (PreToolUse) | 사용자가 읽는 도구 글이 한국어가 아니면 막는다. 작업 요약과 작업 목록(`wrap_up`, `update_plan`), 파일 캡션(`SendUserFile`), `AskUserQuestion` 의 질문과 선택지, Bash 명령 설명이 대상이다. `AskUserQuestion` 에 질문이 둘 이상이어도 막는다 |
 

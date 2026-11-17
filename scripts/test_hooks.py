@@ -50,6 +50,24 @@ with tempfile.TemporaryDirectory() as t:
     if run('open-plan-stop.py', {'transcript_path': p, 'stop_hook_active': True}):
         fails.append('open-plan-stop: 이미 한 번 막았으면 놓아줘야 함')
 
+    def slash(name):
+        return {'type': 'user', 'message': {'content': f'<command-message>dev:{name}</command-message>\n<command-name>/dev:{name}</command-name>\n<command-args>x</command-args>'}}
+    quoted = {'type': 'user', 'message': {'content': '이 글에 <command-name>/dev:idea</command-name> 가 인용됨'}}
+    edit = ('Edit', {'file_path': '/Users/me/repo/app.py'})
+    for name, entries, (tname, tinp), expect in [
+        ('idea 중 코드 편집', [slash('idea')], edit, True),
+        ('idea 중 커밋', [slash('idea')], ('Bash', {'command': 'git add -A && git commit -m x'}), True),
+        ('idea 중 PR 열기', [slash('idea')], ('Bash', {'command': 'gh pr create --fill'}), True),
+        ('idea 중 조사 명령', [slash('idea')], ('Bash', {'command': 'git log --oneline -5 && gh pr list'}), False),
+        ('idea 중 임시 스크립트', [slash('idea')], ('Write', {'file_path': '/tmp/count.py'}), False),
+        ('idea 뒤 /dev:mode', [slash('idea'), slash('mode')], edit, False),
+        ('명령 없음', [], edit, False),
+        ('인용된 idea 는 셈 안 함', [slash('mode'), quoted], edit, False),
+    ]:
+        open(p, 'w').write(''.join(json.dumps(e) + '\n' for e in entries))
+        if ('deny' in run('idea-no-build.py', {'transcript_path': p, 'tool_name': tname, 'tool_input': tinp})) != expect:
+            fails.append(f'idea-no-build: {name}')
+
 for name, tool, inp, expect in [
     ('한국어 recap', 'mcp__ccd_turn__wrap_up', {'recap': '빈 PR 머지를 막는 훅을 넣었어요. `check.py` 가 통과했고 CI 는 아직 돌고 있어요.', 'actions': [{'label': 'PR 머지'}]}, False),
     ('영어 recap', 'mcp__ccd_turn__wrap_up', {'recap': 'Added the empty PR merge gate. check.py passes and CI is still running.'}, True),
