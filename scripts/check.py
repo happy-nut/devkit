@@ -129,4 +129,7 @@ if errors:
 r = subprocess.run([sys.executable, '-I', 'scripts/test_hooks.py'], capture_output=True, text=True)
 if r.returncode:
     sys.exit(r.stdout + r.stderr)
+r = subprocess.run([sys.executable, '-I', 'skills/no-comments/scripts/count.py', '--self-test'], capture_output=True, text=True)
+if r.returncode:
+    sys.exit(r.stdout + r.stderr)
 print(f'OK 스킬 {len(skills)} · 에이전트 {len(agents)} · 원칙 {len(principles)}')
