@@ -1,6 +1,6 @@
 # 스킬 쓰기·고치기
 
-**언제.** SKILL.md, 플레이북, 서브에이전트 정의를 쓰거나 고친다. devkit 자체를 고치는 일은 `/devkit:reflect` 가 여기로 온다.
+**언제.** SKILL.md, 플레이북, 서브에이전트 정의를 쓰거나 고친다. devkit 자체를 고치는 일은 `/dev:reflect` 가 여기로 온다.
 
 **소유.** 스킬의 목소리를 소유한다.
 
@@ -9,7 +9,7 @@
 1. 쓰는 규칙을 먼저 읽는다.
    devkit 안이면 devkit 의 `docs/authoring.md` 를 끝까지 읽고 그대로 쓴다. 다른 저장소의 스킬이면 그 저장소 `AGENTS.md`·`CLAUDE.md` 와 기존 스킬의 형식을 따른다. `skill-creator` 스킬이 있으면 뼈대와 평가에 쓴다.
 2. 스킬을 검사한다.
-   frontmatter 에 `name`(폴더 이름과 같게)과 `description` 이 있고, 가리키는 파일이 있고, 다른 스킬 링크(`/devkit:<이름>`, `../<스킬>/...`)가 풀린다. devkit 이면 `python3 scripts/check.py` 를 돌린다.
+   frontmatter 에 `name`(폴더 이름과 같게)과 `description` 이 있고, 가리키는 파일이 있고, 다른 스킬 링크(`/dev:<이름>`, `../<스킬>/...`)가 풀린다. devkit 이면 `python3 scripts/check.py` 를 돌린다.
 3. 구조적인 스킬이면 시험을 만든다.
    스크립트·형식 검사기처럼 맞고 틀림이 있는 것은 시험(`node --test` 등)을 같이 둔다. 주관적인 글이면 생략한다.
 4. `opening-a-pr.md` 로 PR 을 연다.

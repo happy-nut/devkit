@@ -1,14 +1,14 @@
 ---
 name: catchup-video
-description: "/devkit:catchup 처럼 따라잡게 하되, 일어난 일은 자막 달린 짧은 슬라이드 영상으로 보여 주고 사용자를 기다리는 결정은 그 아래 글로 둔다. Use for /devkit:catchup-video, \"catch me up with a video\", \"show me what happened as a video\"."
+description: "/dev:catchup 처럼 따라잡게 하되, 일어난 일은 자막 달린 짧은 슬라이드 영상으로 보여 주고 사용자를 기다리는 결정은 그 아래 글로 둔다. Use for /dev:catchup-video, \"catch me up with a video\", \"show me what happened as a video\"."
 disable-model-invocation: true
 ---
 
 # Catchup video
 
-/devkit:catchup 을 따른다. 다만 그 스킬의 「일어난 일」 요약과 그림 대신 자막 달린 짧은 영상으로 일어난 일을 보여 준다. 따라잡을 구간은 사용자가 `/devkit:catchup-video` 앞에 마지막으로 쓴 메시지부터다. 그 전의 `/devkit:catchup` 에서부터가 아니다. /devkit:catchup 의 읽기만 하는 규칙에서 예외는 하나다. 저장소 밖(scratch 폴더)에서 영상을 쓰고 렌더하는 것은 해도 된다.
+/dev:catchup 을 따른다. 다만 그 스킬의 「일어난 일」 요약과 그림 대신 자막 달린 짧은 영상으로 일어난 일을 보여 준다. 따라잡을 구간은 사용자가 `/dev:catchup-video` 앞에 마지막으로 쓴 메시지부터다. 그 전의 `/dev:catchup` 에서부터가 아니다. /dev:catchup 의 읽기만 하는 규칙에서 예외는 하나다. 저장소 밖(scratch 폴더)에서 영상을 쓰고 렌더하는 것은 해도 된다.
 
-답장은 이 순서다. /devkit:catchup 의 첫 문장, 영상, 내가 더 할 수 있는 남은 일 한 줄, 결정 항목. 영상은 파일로 보낸다. 사용자에게 파일을 보내는 도구가 있으면(데스크톱 앱의 SendUserFile 같은 것) 그것으로 보내고, 없으면 mp4 의 절대 경로를 쓴다. 영상이 어떤 결정의 선택지를 보여 주면 결정 항목에서도 각 선택지를 영상이 붙인 이름 그대로 부른다. 렌더가 실패하면 실패했다고 한 줄 쓰고 결정 항목만 준다.
+답장은 이 순서다. /dev:catchup 의 첫 문장, 영상, 내가 더 할 수 있는 남은 일 한 줄, 결정 항목. 영상은 파일로 보낸다. 사용자에게 파일을 보내는 도구가 있으면(데스크톱 앱의 SendUserFile 같은 것) 그것으로 보내고, 없으면 mp4 의 절대 경로를 쓴다. 영상이 어떤 결정의 선택지를 보여 주면 결정 항목에서도 각 선택지를 영상이 붙인 이름 그대로 부른다. 렌더가 실패하면 실패했다고 한 줄 쓰고 결정 항목만 준다.
 
 ## 슬라이드
 

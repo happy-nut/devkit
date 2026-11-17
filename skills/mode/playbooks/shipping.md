@@ -7,7 +7,7 @@
 ## 단계
 
 1. 착지 전에 PR 마다 따로 검증한다.
-   PR 도구는 `opening-a-pr.md` 6단계대로 `gh` 가 기본이고 `gt` 를 요구하지 않는다. PR 하나에 검증자 하나. 검증자는 `Agent`(`subagent_type: "devkit:worker"`, `model: "sonnet"`, `isolation: "worktree"`, `run_in_background: true`)로 띄운다. 검증자는 사용자가 쓰듯 그 표면을 몰아 본다. 웹은 브라우저 도구(Claude in Chrome, 내장 브라우저, playwright), CLI 는 터미널, 앱마다 검증 스킬이 있으면 그것(`/devkit:verify-setup` 으로 만든 것). 부모와 head 를 비교하고 `PASS`, `PASS+NOTES`, `FAIL` 중 하나를 그 PR 에 남긴다(`gh pr comment <pr> --body-file <file>`). 화면 변경이면 기능마다 스크린샷을 같이 남긴다. 코드를 쓰지 않은 에이전트의 판정만 센다. 작성자는 만들려던 것을 확인하기 때문이다. 초록 CI 와 승인한 봇 리뷰는 판정이 아니다. 둘 다 사용자처럼 변경을 돌려 보지 않는다.
+   PR 도구는 `opening-a-pr.md` 6단계대로 `gh` 가 기본이고 `gt` 를 요구하지 않는다. PR 하나에 검증자 하나. 검증자는 `Agent`(`subagent_type: "dev:worker"`, `model: "sonnet"`, `isolation: "worktree"`, `run_in_background: true`)로 띄운다. 검증자는 사용자가 쓰듯 그 표면을 몰아 본다. 웹은 브라우저 도구(Claude in Chrome, 내장 브라우저, playwright), CLI 는 터미널, 앱마다 검증 스킬이 있으면 그것(`/dev:verify-setup` 으로 만든 것). 부모와 head 를 비교하고 `PASS`, `PASS+NOTES`, `FAIL` 중 하나를 그 PR 에 남긴다(`gh pr comment <pr> --body-file <file>`). 화면 변경이면 기능마다 스크린샷을 같이 남긴다. 코드를 쓰지 않은 에이전트의 판정만 센다. 작성자는 만들려던 것을 확인하기 때문이다. 초록 CI 와 승인한 봇 리뷰는 판정이 아니다. 둘 다 사용자처럼 변경을 돌려 보지 않는다.
 2. 맨 아래에서 이어지는 검증된 구간만 착지시킨다.
    가장 아래 머지 안 된 PR 에서 위로 걸어가다 `PASS` 나 `PASS+NOTES` 가 없는 첫 PR 에서 멈춘다. 그 아래 PR 들이 구간이고 맨 위가 천장이다. 검증 안 된 PR 위의 검증된 PR 은 기다린다. 아래 코드 없이 착지할 수 없기 때문이다. 브랜치가 그 코드를 품지도 필요로 하지도 않는 PR 은 trunk 로 옮겨 따로 착지할 수 있다. 다만 새 판정이 먼저다. 옛 판정은 그 코드를 아래 깔고 돌았고 trunk 에는 그 코드가 없다.
 3. 판정이 아직 코드를 설명하는지 다시 확인한다.

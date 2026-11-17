@@ -13,11 +13,11 @@
 2. 코드에 빠진 구조를 이름 짓는다(principles.md 의 Model the Domain).
    모양이 이미 분명하고 국소적이면 지루한 코드는 그대로 둔다. 새 모양은 분기나 잘못된 상태를 지워야 한다. 간접층을 더하면 안 된다.
 3. 목표 모양을 이름 짓는다.
-   오늘 새로 만든다면 모듈 배치, 타입, 호출 그래프가 어떠해야 하는지 적는다(principles.md 의 Foundational Thinking, Redesign from First Principles). 목표가 함수 경계를 넘으면 옮기기 전에 `/devkit:design` 으로 모양의 병렬 설계 탐색을 한다.
+   오늘 새로 만든다면 모듈 배치, 타입, 호출 그래프가 어떠해야 하는지 적는다(principles.md 의 Foundational Thinking, Redesign from First Principles). 목표가 함수 경계를 넘으면 옮기기 전에 `/dev:design` 으로 모양의 병렬 설계 탐색을 한다.
 4. 더하기 전에 뺀다.
    새 모양을 들이기 전에 죽은 코드를 지우고, 호출자 하나뿐인 래퍼를 접고, 중복 검증기를 빼고, 고아 참조를 없앤다(principles.md 의 Subtract Before You Add). 목표 모양에 닿는 가장 작은 변경만 내보낸다(principles.md 의 Laziness Protocol). 「도움이 될지도」 싶은 추측성 정리는 되돌린다.
 5. 동작을 보존하는 작은 걸음으로 옮긴다. 걸음마다 고정이 초록이어야 한다.
-   API 모양을 바꾸면 모든 호출자를 옮기고 옛 API 를 같은 물결에서 지운다(principles.md 의 Migrate Callers Then Delete Legacy APIs). 호환 shim 도, 옛길과 새길을 나란히 두는 것도 없다. 이름 바꾸기는 실제 파일에서 하나하나 확인한다. 문자열, 산문, 역참조에서 조용히 빠진다. 기계적 편집은 범위(파일 경로, 옮기는 이름, 지킬 동작)를 구체적으로 정해 서브에이전트(`subagent_type: "devkit:worker"`, 모델 `sonnet`, 판단이 섞이면 `opus`)에 맡긴다.
+   API 모양을 바꾸면 모든 호출자를 옮기고 옛 API 를 같은 물결에서 지운다(principles.md 의 Migrate Callers Then Delete Legacy APIs). 호환 shim 도, 옛길과 새길을 나란히 두는 것도 없다. 이름 바꾸기는 실제 파일에서 하나하나 확인한다. 문자열, 산문, 역참조에서 조용히 빠진다. 기계적 편집은 범위(파일 경로, 옮기는 이름, 지킬 동작)를 구체적으로 정해 서브에이전트(`subagent_type: "dev:worker"`, 모델 `sonnet`, 판단이 섞이면 `opus`)에 맡긴다.
 6. 실제 산출물에서 동작이 그대로임을 증명한다.
    「컴파일된다」는 증명이 아니다(principles.md 의 Prove It Works). 큰 변경은 등가 검사를 돌린다. 옛 출력과 새 출력을 diff 하는 스크립트, 기록한 기준선을 새 코드에 재생, 같은 표면(브라우저 도구나 터미널)에서의 스모크 실행. 화면이 닿는 변경이면 전후 스크린샷을 비교한다.
 7. 남길 가치가 있는지 확인한다.

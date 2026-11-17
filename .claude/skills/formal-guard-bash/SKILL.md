@@ -29,7 +29,7 @@ python3 .claude/skills/formal-guard-bash/check_merge_gate.py
 ## 범위와 한계
 
 - `merge_gate` 함수 하나만 본다. `guard-bash.py` 의 다른 RULES(pytest 파이프 뒤 커밋) 는 덮지 않는다.
-- gh 가 실제로 내는 JSON·텍스트 모양이 바뀌면(필드 이름, "no checks reported" 문구 등) 이 모델도 같이 낡는다. `/devkit:formal-setup` 을 다시 부르면 "유지"로 들어가 코드와 다시 맞춘다.
+- gh 가 실제로 내는 JSON·텍스트 모양이 바뀌면(필드 이름, "no checks reported" 문구 등) 이 모델도 같이 낡는다. `/dev:formal-setup` 을 다시 부르면 "유지"로 들어가 코드와 다시 맞춘다.
 - 이 검사는 `merge_gate` 가 돌려주는 거부 사유 문자열의 "내용"은 보지 않는다. deny 인지 allow 인지만 본다.
 
 ## 동기화 커밋

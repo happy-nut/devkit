@@ -1,6 +1,6 @@
 ---
 name: comment-reviewer
-description: "읽기 전용 주석 리뷰어. 주어진 파일이나 diff 의 주석·억제 지시를 하나씩 심사해 지울 것과 남길 것, 이름 바꾸기·추출·타입·재설계로 없애야 할 심볼(MUST KILL)을 보고한다. 파일을 고치지 않는다. /devkit:no-comments 가 부른다."
+description: "읽기 전용 주석 리뷰어. 주어진 파일이나 diff 의 주석·억제 지시를 하나씩 심사해 지울 것과 남길 것, 이름 바꾸기·추출·타입·재설계로 없애야 할 심볼(MUST KILL)을 보고한다. 파일을 고치지 않는다. /dev:no-comments 가 부른다."
 tools: Read, Grep, Glob, Bash
 model: opus
 ---

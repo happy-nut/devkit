@@ -1,6 +1,6 @@
 ---
 name: review
-description: "변경이나 설계를 여러 모델이 적대적으로 깨 보고, 실행으로 증명된 것만 act on/consider/noted/dismissed 로 나눠 보고한다. diff 너머 파급 범위와 안전 근거 한 가지를 스크립트로 증명한다. 고치지 않는다. Use for 'review', 'interrogate', 'adversarial review', 'multi-model review', 'challenge this', 'stress test this code', 'find blind spots', 'tear this apart', 'blast radius of X', 'what could this break'. /devkit:review"
+description: "변경이나 설계를 여러 모델이 적대적으로 깨 보고, 실행으로 증명된 것만 act on/consider/noted/dismissed 로 나눠 보고한다. diff 너머 파급 범위와 안전 근거 한 가지를 스크립트로 증명한다. 고치지 않는다. Use for 'review', 'interrogate', 'adversarial review', 'multi-model review', 'challenge this', 'stress test this code', 'find blind spots', 'tear this apart', 'blast radius of X', 'what could this break'. /dev:review"
 disable-model-invocation: true
 ---
 
@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 지적을 보고만 한다. 고치지 않는다. 고치는 것은 사용자가 따로 시킬 때 한다.
 
-`/devkit:how` 는 코드가 무엇을 하는지, `/devkit:why` 는 왜 그런 모양인지 알려 준다. 이 스킬은 그것이 다른 곳에서 무엇을 깨는지 알려 준다. 호출자 목록을 뽑는 것은 일이 아니다. grep 이면 1초다. 일은 grep 이 보여 주지 않는 깨짐이다.
+`/dev:how` 는 코드가 무엇을 하는지, `/dev:why` 는 왜 그런 모양인지 알려 준다. 이 스킬은 그것이 다른 곳에서 무엇을 깨는지 알려 준다. 호출자 목록을 뽑는 것은 일이 아니다. grep 이면 1초다. 일은 grep 이 보여 주지 않는 깨짐이다.
 
 ## 시작
 
@@ -68,11 +68,11 @@ git log --oneline "$base"..HEAD
      > /tmp/review-<slug>/uncommitted.patch   # 추적 안 하는 새 파일까지
    ```
 
-2. 검토자 N개를 한 메시지에서 띄운다. 각 호출은 `subagent_type: "devkit:worker"`, `model`, `isolation: "worktree"`, `run_in_background: true`. 브리프에 범위, 다시 적은 의도, 패치 경로와 「먼저 `git apply /tmp/review-<slug>/uncommitted.patch`」, 그리고 아래 지시를 그대로 넣는다.
+2. 검토자 N개를 한 메시지에서 띄운다. 각 호출은 `subagent_type: "dev:worker"`, `model`, `isolation: "worktree"`, `run_in_background: true`. 브리프에 범위, 다시 적은 의도, 패치 경로와 「먼저 `git apply /tmp/review-<slug>/uncommitted.patch`」, 그리고 아래 지시를 그대로 넣는다.
 
 > 이 변경을 깨라. 지적마다 실제 코드를 상대로 돌린 것으로 증명한다. 실패하는 테스트, 재현 스크립트, 잘못된 동작을 보여 주는 명령 출력. 설계나 계획이면 프로토타입을 돌리거나 지금 트리를 찔러 본다. 재현물은 네 worktree 안에 둔다. 지적마다 제목, 정확한 명령, 그 명령이 찍은 출력, 의도대로라면 나와야 할 출력을 적는다. 돌리지 않은 것은 뺀다. 스타일, 이름, 구조, 미래의 변경이 있어야 문제가 되는 위험이 여기 든다. 지적이 없는 것도 올바른 결과다. 저장소 파일은 고치지 말고 커밋하지 마라.
 
-검토자가 결과 없이 떨어지면 N-1 개로 진행하고 적는다. `/devkit:design` 의 심사, 기반 고르기, 접붙이기는 하지 않는다. 검토자마다 다른 결함을 찾으므로 한 검토자의 목록을 고르지 않고 검증된 지적을 모두 남긴다.
+검토자가 결과 없이 떨어지면 N-1 개로 진행하고 적는다. `/dev:design` 의 심사, 기반 고르기, 접붙이기는 하지 않는다. 검토자마다 다른 결함을 찾으므로 한 검토자의 목록을 고르지 않고 검증된 지적을 모두 남긴다.
 
 ## 4. Verify: 다시 돌려 나눈다
 
@@ -91,7 +91,7 @@ git log --oneline "$base"..HEAD
 
 ## 보고
 
-`/devkit:write` 기준으로 쓴다. 실제 코드를 인용한다. 공개되는 곳에 올리기 전에 사적인 정보를 지운다.
+`/dev:write` 기준으로 쓴다. 실제 코드를 인용한다. 공개되는 곳에 올리기 전에 사적인 정보를 지운다.
 
 - **의도**: 다시 적은 의도. 가정했으면 그 가정.
 - **무엇을 하는가**: 바뀐 것. 뻔하지 않은 부분까지.

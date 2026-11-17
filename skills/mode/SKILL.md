@@ -1,16 +1,16 @@
 ---
 name: mode
-description: "이 사용자의 작업 모드. 작업을 플레이북에 맞춰 단계대로 하고, 원칙으로 판단하고, 눈으로 본 증거로 끝낸다. Use for /devkit:mode, or requests to work in the user's style."
+description: "이 사용자의 작업 모드. 작업을 플레이북에 맞춰 단계대로 하고, 원칙으로 판단하고, 눈으로 본 증거로 끝낸다. Use for /dev:mode, or requests to work in the user's style."
 disable-model-invocation: true
 ---
 
 # 작업 모드
 
-이 파일이 devkit 의 중심이다. 같은 폴더의 `principles.md`(원칙), `playbooks/`(플레이북), `references/`, `scripts/` 를 쓰고, 다른 devkit 스킬은 `/devkit:<이름>` 으로 부른다. 저장소의 `AGENTS.md`·`CLAUDE.md` 가 이 파일보다 앞선다.
+이 파일이 devkit 의 중심이다. 같은 폴더의 `principles.md`(원칙), `playbooks/`(플레이북), `references/`, `scripts/` 를 쓰고, 다른 devkit 스킬은 `/dev:<이름>` 으로 부른다. 저장소의 `AGENTS.md`·`CLAUDE.md` 가 이 파일보다 앞선다.
 
 ## 시작
 
-1. 이 파일의 절대 경로를 기억한다. 모든 `devkit:worker` 브리프에 넣는다.
+1. 이 파일의 절대 경로를 기억한다. 모든 `dev:worker` 브리프에 넣는다.
 2. **저장소 구분.** 개인 저장소 목록은 devkit 밖, 그 머신의 설정 파일 `~/.claude/devkit.json` 에 있다(`{"personal": {"owners": [...], "paths": [...]}}`). `git remote get-url origin` 의 소유자가 `owners` 에 있거나 저장소가 `paths` 아래면 **개인**, 아니면 **회사**. 파일이 없으면 모두 회사로 본다(더 조심하는 쪽). 「자율」 절이 둘을 다르게 다룬다.
 3. 첫 메시지에 목표, 풀려는 문제, 바꾸는 일이면 예상되는 가장 작은 변경을 자기 말로 적는다. 확인을 기다리지 않는다. 증거가 요청된 변경을 배제하면 그 증거를 보이고 멈춘다. 이 목표 재진술을 모든 서브에이전트 브리프, 모든 PR 의 `## Why` 첫머리, 최종 보고 첫머리에 넣는다(완전히 정해진 한 줄 수정은 예외).
 4. 플레이북을 고르고(아래 「플레이북」) 그 단계를 작업 목록 맨 앞에 그대로 복사한다. 하지 않을 단계도 `skip: <이유>` 로 남긴다.
@@ -41,21 +41,21 @@ devkit 자체가 4층이다. devkit 의 진짜 일은 각 저장소의 1~3층을
 |---|---|
 | 「어느 방법」「어떻게 할까」를 물으려 할 때 | 먼저 가른다. 실행해서 알 수 있는 사실(동작·시간·배치·출력·성능)이면 묻지 않고 `playbooks/prototype.md` 로 정한다. 읽기 전용 조사면 증거로 답한다. 질문은 실험으로 못 정하는 취향·제품 결정 하나만, AskUserQuestion 으로. 「Y 라고 답하세요」 같은 약속어를 주지 않는다 |
 | 코드를 쓸 때 | 데이터 모양부터 이름 짓는다. 구조는 principles.md 의 Model the Domain |
-| 함수 경계를 넘는 코드 | 먼저 `/devkit:design` |
-| 여러 갈래를 동시에 | 커버리지·경주·관문은 `/devkit:swarm`, 설계·코드 비교는 `/devkit:design` |
-| 논쟁적 설계 | 내보내기 전에 `/devkit:review` |
+| 함수 경계를 넘는 코드 | 먼저 `/dev:design` |
+| 여러 갈래를 동시에 | 커버리지·경주·관문은 `/dev:swarm`, 설계·코드 비교는 `/dev:design` |
+| 논쟁적 설계 | 내보내기 전에 `/dev:review` |
 | 여러 단계짜리 일 | 처리량 점검을 적는다(`playbooks/feature.md` 3단계) |
-| 사용자에게 하는 말, 문서·PR·커밋 글 | `/devkit:write`. 손님이 읽는 한국어 글은 korean-humanizer 를 거쳐 승인받는다 |
+| 사용자에게 하는 말, 문서·PR·커밋 글 | `/dev:write`. 손님이 읽는 한국어 글은 korean-humanizer 를 거쳐 승인받는다 |
 | 커밋 전 | diff 를 다시 읽어 서술 주석, 근거 없는 방어 코드, 죽은 호환 경로, 관계없는 수정을 지운다(`/simplify` 가 있으면 써도 된다) |
-| 리뷰 전 | `/devkit:no-comments` |
+| 리뷰 전 | `/dev:no-comments` |
 | 화면·CLI 를 내보낼 때 | 같은 표면에서 직접 돌린다(브라우저 도구, 터미널). 화면은 기능마다 한 장씩 찍어 보내고, 찍으면서 화면 속 글의 모순·겹침을 읽는다 |
-| 성능을 재거나 빨라졌다고 보고할 때 | 먼저 `/devkit:bench` |
+| 성능을 재거나 빨라졌다고 보고할 때 | 먼저 `/dev:bench` |
 | PR 상태 요청(「초록으로 만들어」「코멘트 처리해」「PR 어때」) | `playbooks/babysit.md`. PR 을 연 것만으로는 걸리지 않는다 |
 | 초록 스택을 내보내라 | `playbooks/shipping.md`. 초록은 안전이 아니다 |
 | PR 리뷰 코멘트(사람·봇) | 하나씩 따진다. `references/review-triage.md` 로 고침/기각/질문 |
-| 사용자에게 교정을 받음 | 대화에서 고치고 끝내지 않는다. 그 자리에서 `/devkit:correct` 로 피라미드의 가장 높은 층(구조, 린트·테스트·훅)에 넣는다. 판단이라 장치가 불가능할 때만 그 저장소 `AGENTS.md` 의 결정 지점에. 보고에 어느 층에 넣었는지 쓴다 |
-| 작업 중 devkit 스킬이 틀렸다 | 막지도 몰래 우회하지도 않는다. devkit 저장소에 따로 고친다(`/devkit:reflect`) |
-| 길거나 자율이거나 사용자가 자리를 비움 | `/devkit:log` 로 결정 기록을 남긴다 |
+| 사용자에게 교정을 받음 | 대화에서 고치고 끝내지 않는다. 그 자리에서 `/dev:correct` 로 피라미드의 가장 높은 층(구조, 린트·테스트·훅)에 넣는다. 판단이라 장치가 불가능할 때만 그 저장소 `AGENTS.md` 의 결정 지점에. 보고에 어느 층에 넣었는지 쓴다 |
+| 작업 중 devkit 스킬이 틀렸다 | 막지도 몰래 우회하지도 않는다. devkit 저장소에 따로 고친다(`/dev:reflect`) |
+| 길거나 자율이거나 사용자가 자리를 비움 | `/dev:log` 로 결정 기록을 남긴다 |
 
 ## 플레이북
 
@@ -98,14 +98,14 @@ devkit 자체가 4층이다. devkit 의 진짜 일은 각 저장소의 1~3층을
    - 틀과 트레이드오프를 보이고 시작한다. 되돌릴 수 있는 일은 진행하되, 여러 시간짜리 실행은 한 번 점검을 받는다.
 2. **흐름 설계.** 독립적으로 내보낼 수 있는 단위로 쪼갠다. 가장 위험한 미지부터. 뼈대와 검증이 기능보다 먼저(principles.md 의 Foundational Thinking).
    - 일 전에 검증 장치를 만들고 바꾸기 전 상태로 기준선을 잡아 「옛 값 대 새 값」으로 읽히게 한다.
-   - 되돌릴 수 없는 설계 결정은 `/devkit:design`. 모양이 이미 분명한 기계적 일은 건너뛴다. 정해진 설계에 두 번째 비교는 과하다(principles.md 의 Laziness Protocol).
+   - 되돌릴 수 없는 설계 결정은 `/dev:design`. 모양이 이미 분명한 기계적 일은 건너뛴다. 정해진 설계에 두 번째 비교는 과하다(principles.md 의 Laziness Protocol).
    - 갈라 붙일 이음매에서만 병렬로. 워커마다 자기 워크트리나 브랜치(principles.md 의 Separate Before Serializing Shared State). 과하게 펼치지 않는다.
    - 설계한 단계 목록을 적는다. 사람이 검토하는 건 이 목록이다. 그 단계를 3과 4 사이에 작업 목록으로 넣는다.
 3. **실험 루프.** 단위마다 가설을 말하고, 가장 작은 변경을 하고, 실제 산출물에서 완료 조건으로 재고, 나아졌으면 남기고 아니면 되돌린다. 다음 단위 전에 지금 단위를 검증한다(principles.md 의 Sequence Work into Verifiable Units).
    - 자기 보고가 아니라 산출물을 직접 본다. 너무 쉽게 통과하면 시스템보다 관찰 방법을 먼저 의심한다.
    - 맡긴 일에는 심판을 붙인다. 워커가 관문을 속이면 계약을 되돌리고 단단히 한다. 관문이 틀렸으면 우회하지 말고 따로 고친다.
    - 판정은 VERIFIED, NOT VERIFIED, INCONCLUSIVE 셋. INCONCLUSIVE 는 통과가 아니다. 불리한 결과를 숨기지 않는다.
-4. **기록.** `/devkit:log` 로 단계가 끝날 때마다 한 줄씩. 이 정도 일은 기록을 커밋해 PR 에서 읽히게 한다.
+4. **기록.** `/dev:log` 로 단계가 끝날 때마다 한 줄씩. 이 정도 일은 기록을 커밋해 PR 에서 읽히게 한다.
 5. **검증과 넘기기.** 전체를 1의 완료 조건으로 실제 제품에서 확인한다(장치만이 아니라). 되풀이된 교정은 관문·린트·검사·스크립트로 넣는다(principles.md 의 Encode Lessons in Structure).
 
 보고: 설계한 플레이북, 엄격함 수준과 이유, 기록 경로, 완료 조건 대비 검증된 것, 남은 것.
@@ -130,9 +130,9 @@ devkit 자체가 4층이다. devkit 의 진짜 일은 각 저장소의 1~3층을
 
 ## 서브에이전트
 
-- 플레이북 단계 안에서 띄우는 서브에이전트는 `subagent_type: "devkit:worker"`. 플레이북 자체를 워커에게 돌리게 하지 않는다. 이 대화가 플레이북과 작업 목록과 모든 위임을 갖는다. 자기 서브에이전트를 정하는 스킬(`/devkit:swarm`, `/devkit:review`, `/devkit:design`)은 그대로 둔다.
+- 플레이북 단계 안에서 띄우는 서브에이전트는 `subagent_type: "dev:worker"`. 플레이북 자체를 워커에게 돌리게 하지 않는다. 이 대화가 플레이북과 작업 목록과 모든 위임을 갖는다. 자기 서브에이전트를 정하는 스킬(`/dev:swarm`, `/dev:review`, `/dev:design`)은 그대로 둔다.
 - 기본: `run_in_background: true`, 내용 붙여 넣기 대신 파일 경로, 역할마다 모델을 정한다. 코드·판단·글은 `opus`, 가장 어려운 일(교차 설계, 까다로운 동시성, 미묘한 알고리즘)은 `fable`, 검증·기계적 편집·넓게 읽기는 `sonnet`.
-- `~/.claude/devkit.json` 의 `models` 가 있으면 그것을 쓴다(`code`·`hardest`·`mechanical` 은 위 세 역할, `panel` 은 `/devkit:design`·`/devkit:review` 의 러너·검토자 목록. 없는 키는 위 기본값, `/devkit:setup` 이 쓴다).
+- `~/.claude/devkit.json` 의 `models` 가 있으면 그것을 쓴다(`code`·`hardest`·`mechanical` 은 위 세 역할, `panel` 은 `/dev:design`·`/dev:review` 의 러너·검토자 목록. 없는 키는 위 기본값, `/dev:setup` 이 쓴다).
 - `Agent` 가 지정한 모델을 못 찾거나 거부하면 `model` 을 빼고 다시 불러 지금 세션의 모델을 그대로 승계하고 그렇게 말한다. 서브에이전트를 못 띄운 채 멈추지 않는다.
 - 넓게 읽는 일과 오래 걸리는 수집은 서브에이전트에 준다. 이 스레드는 결론만 갖는다(principles.md 의 Guard the Context Window).
 - 병렬로 쓰는 워커는 `isolation: "worktree"` 로 서로 다른 파일을 갖게 한다.

@@ -7,7 +7,7 @@
 ## 단계
 
 1. 같은 표면에서 기준선 trace 를 잡는다.
-   웹이면 playwright 로 CDP 성능 trace, 터미널 프로세스면 그 언어의 프로파일러(`py-spy`, `node --cpu-prof` 등). 기준선과 이후의 모든 숫자는 `/devkit:bench` 로 검증한다. principles.md 의 Explain the Number 대로, 숫자를 믿기 전에 무엇이 그 숫자를 제한하는지 찾는다.
+   웹이면 playwright 로 CDP 성능 trace, 터미널 프로세스면 그 언어의 프로파일러(`py-spy`, `node --cpu-prof` 등). 기준선과 이후의 모든 숫자는 `/dev:bench` 로 검증한다. principles.md 의 Explain the Number 대로, 숫자를 믿기 전에 무엇이 그 숫자를 제한하는지 찾는다.
 2. 코드를 추적해 가설을 세운다.
    돌려 보지 않고 성능 한계를 주장하지 않는다. 성능 주문을 싼 것부터 순서대로 시도한다.
    1. 하지 마라. 결과를 아무도 안 쓰는 일은 싸게 만들지 말고 멈춘다.
@@ -20,7 +20,7 @@
 
    앞 단계가 목표에 닿으면 멈춘다.
 3. trace 를 근거로 수정을 계획하고 맡긴다.
-   함수 경계를 넘으면 먼저 `/devkit:design`. 구현은 서브에이전트(`subagent_type: "devkit:worker"`, 모델 `opus`, 가장 어려운 변경이면 `fable`)에 맡긴다. diff 를 리뷰한다. 수정 뒤 trace 를 다시 잡는다. principles.md 의 Sequence Work into Verifiable Units 대로 시도 하나를 검증한 뒤 다음 시도로 간다.
+   함수 경계를 넘으면 먼저 `/dev:design`. 구현은 서브에이전트(`subagent_type: "dev:worker"`, 모델 `opus`, 가장 어려운 변경이면 `fable`)에 맡긴다. diff 를 리뷰한다. 수정 뒤 trace 를 다시 잡는다. principles.md 의 Sequence Work into Verifiable Units 대로 시도 하나를 검증한 뒤 다음 시도로 간다.
 4. 산출물을 파싱해 비교한다.
    JSON 은 sqlite 로 옮겨 쿼리하고, 전후를 diff 한다. 「판단 불가」나 다른 표면의 결과는 통과가 아니다. 그렇게 표시한다. 화면에서 느끼는 속도가 문제였으면 화면에서 다시 재 본다.
 5. PR 에 측정을 인용한다.

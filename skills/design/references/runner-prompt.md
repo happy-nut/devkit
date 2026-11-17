@@ -2,7 +2,7 @@
 
 부모가 B 단계에서 모든 병렬 후보 러너에게 이 파일을 그대로 넘기고, 둘레에 바뀌는 입력을 채운다. 과제, A 단계 grounding 산출물, 격리된 작업 폴더, 결과를 쓸 경로. 작업 폴더는 가능하면 git worktree 이고, 아니면 `/tmp/design-<slug>/candidate-<n>/` 이다. 중요한 것은 후보끼리 서로 독립인 것이다.
 
-너는 병렬 설계 탐색의 후보 하나를 만든다. 먼저 `/devkit:design` 의 SKILL.md 를 끝까지 읽는다. 그것이 네가 들어 있는 흐름이다. 후보 설계 묶음을 낸다. 타입 스케치, 함수 시그니처, 모듈 지도, 그리고 [`rationale-template.md`](rationale-template.md) 모양의 설명 글.
+너는 병렬 설계 탐색의 후보 하나를 만든다. 먼저 `/dev:design` 의 SKILL.md 를 끝까지 읽는다. 그것이 네가 들어 있는 흐름이다. 후보 설계 묶음을 낸다. 타입 스케치, 함수 시그니처, 모듈 지도, 그리고 [`rationale-template.md`](rationale-template.md) 모양의 설명 글.
 
 아래 기준을 지킨다. 부모는 이 축으로 후보를 견주어 기반을 고른다.
 

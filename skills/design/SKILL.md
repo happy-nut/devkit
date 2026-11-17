@@ -1,6 +1,6 @@
 ---
 name: design
-description: "코드 전에 타입·시그니처·모듈 구조를 여러 모델로 병렬 스케치하고, 기반 하나를 골라 다른 안의 좋은 점을 접붙인 뒤 그 스케치를 계약 삼아 구현한다. 설계가 아닌 산출물도 같은 경쟁 절차로 돌린다. Use for 'design this', 'architect this', 'arena this', 'throw it in the arena', or non-trivial work where one attempt would lock in the wrong shape. /devkit:design"
+description: "코드 전에 타입·시그니처·모듈 구조를 여러 모델로 병렬 스케치하고, 기반 하나를 골라 다른 안의 좋은 점을 접붙인 뒤 그 스케치를 계약 삼아 구현한다. 설계가 아닌 산출물도 같은 경쟁 절차로 돌린다. Use for 'design this', 'architect this', 'arena this', 'throw it in the arena', or non-trivial work where one attempt would lock in the wrong shape. /dev:design"
 disable-model-invocation: true
 ---
 
@@ -24,7 +24,7 @@ disable-model-invocation: true
 
 ## A. Ground: 문제를 땅에 붙인다
 
-새 코드가 닿는 모든 시스템의 실제 모델을 머릿속에 세운다. 관련 서브시스템을 따라간다. 파일 이름을 대는 것은 grounding 이 아니다. 각 시스템을 아키텍처 관점에서 설명하는 글을 쓴다. 설계가 소유권이나 계층을 다시 정한다면 기존 모양에 `/devkit:why` 를 돌려, 그 이유가 짐작이 아니라 제약이 되게 한다.
+새 코드가 닿는 모든 시스템의 실제 모델을 머릿속에 세운다. 관련 서브시스템을 따라간다. 파일 이름을 대는 것은 grounding 이 아니다. 각 시스템을 아키텍처 관점에서 설명하는 글을 쓴다. 설계가 소유권이나 계층을 다시 정한다면 기존 모양에 `/dev:why` 를 돌려, 그 이유가 짐작이 아니라 제약이 되게 한다.
 
 주변에 붙일 시스템이 전혀 없는 순수 신규 작업일 때만 이 단계를 건너뛴다.
 
@@ -46,7 +46,7 @@ disable-model-invocation: true
 
 부르는 사람이 「확인받고 진행」「구현 전에 보여 줘」처럼 분명히 말했을 때만 합성 설계를 보여 주고 멈춘다.
 
-어느 쪽이든 합성 결과를 따로 커밋해도 된다. `../mode/principles.md` 의 Foundational Thinking 에 있는 「뼈대 먼저」 방식이다. 채우는 동안 계획되고 범위가 정해진 깨짐은 괜찮다(`../mode/principles.md` 의 Outcome-Oriented Execution). 구현 전에 설계를 적대적으로 압박하고 싶으면 합성 스케치에 `/devkit:review` 를 돌린다.
+어느 쪽이든 합성 결과를 따로 커밋해도 된다. `../mode/principles.md` 의 Foundational Thinking 에 있는 「뼈대 먼저」 방식이다. 채우는 동안 계획되고 범위가 정해진 깨짐은 괜찮다(`../mode/principles.md` 의 Outcome-Oriented Execution). 구현 전에 설계를 적대적으로 압박하고 싶으면 합성 스케치에 `/dev:review` 를 돌린다.
 
 사람이 모양에 이의를 내면(확인 단계에서든 나중에든) A 단계의 증거로 다룬다. 코드를 더 쓰기 전에 다시 Ground 하고 B 를 다시 돈다.
 
@@ -97,7 +97,7 @@ disable-model-invocation: true
 
 ## 2. Fan out
 
-N개를 한 메시지에서 모두 띄운다. 각 호출은 `subagent_type: "devkit:worker"`, `model`(3번에서 고른 것), `isolation: "worktree"`, `run_in_background: true`.
+N개를 한 메시지에서 모두 띄운다. 각 호출은 `subagent_type: "dev:worker"`, `model`(3번에서 고른 것), `isolation: "worktree"`, `run_in_background: true`.
 
 브리프마다 과제, 공유 grounding 의 경로, 자기 출력 위치, 그리고 「산출물과 함께, 고려했다가 버린 대안과 그 이유를 짧은 근거 글로 내라」를 담는다. 설계 스케치면 [`references/runner-prompt.md`](references/runner-prompt.md) 를 그대로 붙인다. worktree 에 쓴 러너에게는 끝날 때 작업을 커밋하고 브랜치 이름을 보고하게 한다.
 

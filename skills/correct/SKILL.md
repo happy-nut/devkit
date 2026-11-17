@@ -1,6 +1,6 @@
 ---
 name: correct
-description: "이 저장소에서 에이전트가 되풀이하는 실수를 찾아 하나씩 불가능하게 만든다. 아키텍처, 타입, 고칠 길을 알려 주는 lint, 테스트 순으로 시도하고 문서는 마지막. 새 검사가 실제 과거 실수에서 실패함을 증명한다. 사용자가 에이전트를 교정할 때마다 쓴다. Use for 'correct', 'stop making this mistake', 'make this impossible', repeated corrections. /devkit:correct"
+description: "이 저장소에서 에이전트가 되풀이하는 실수를 찾아 하나씩 불가능하게 만든다. 아키텍처, 타입, 고칠 길을 알려 주는 lint, 테스트 순으로 시도하고 문서는 마지막. 새 검사가 실제 과거 실수에서 실패함을 증명한다. 사용자가 에이전트를 교정할 때마다 쓴다. Use for 'correct', 'stop making this mistake', 'make this impossible', repeated corrections. /dev:correct"
 disable-model-invocation: true
 ---
 
@@ -31,7 +31,7 @@ disable-model-invocation: true
 
 가장 자주 나는 군부터 지금 고친다. 군 하나에 커밋 하나. 새 검사마다 실제 과거 실수에서 실패함을 증명한다. 그 실수가 있던 커밋이나 diff 를 되살려 검사를 돌리고 실패 출력을 보고에 붙인다. 로컬과 CI 에서 같은 명령을 돌린다. 예외는 문제의 줄에 이유, 만료일, 사람의 승인과 함께 단다.
 
-저장소 구분대로 끝까지 간다(개인/회사 구분은 `/devkit:mode` 의 「저장소 구분」). 개인 저장소면 PR, CI 통과, 머지까지. 회사 저장소면 커밋과 브랜치까지 하고, 머지와 공유 브랜치 push 는 사용자가 그 말을 했을 때만.
+저장소 구분대로 끝까지 간다(개인/회사 구분은 `/dev:mode` 의 「저장소 구분」). 개인 저장소면 PR, CI 통과, 머지까지. 회사 저장소면 커밋과 브랜치까지 하고, 머지와 공유 브랜치 push 는 사용자가 그 말을 했을 때만.
 
 ## 규칙 표를 유지한다
 

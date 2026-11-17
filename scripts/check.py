@@ -1,7 +1,7 @@
 """devkit 저장소 검사. 실행: python3 scripts/check.py
 
 - 모든 스킬·에이전트의 frontmatter
-- 본문이 가리키는 플레이북·참고·스크립트 파일, /devkit:<스킬>, devkit:<에이전트>, principles.md 의 <원칙> 이 실제로 있는지
+- 본문이 가리키는 플레이북·참고·스크립트 파일, /dev:<스킬>, dev:<에이전트>, principles.md 의 <원칙> 이 실제로 있는지
 - 옮기기 전 이름(Cursor·pstack 흔적)과 긴 대시가 남지 않았는지
 """
 import glob, json, os, re, sys
@@ -57,12 +57,12 @@ for path in glob.glob('skills/**/*', recursive=True) + glob.glob('agents/*.md'):
     if not path.endswith('.md'):
         continue
     skill_dir = path.split('/')[1] if path.startswith('skills/') else None
-    for s in re.findall(r'/devkit:([a-z][\w-]*)', text):
+    for s in re.findall(r'/dev:([a-z][\w-]*)', text):
         if s not in skills:
-            errors.append(f'{path}: 없는 스킬 /devkit:{s}')
-    for a in re.findall(r'(?<![/\w])devkit:([a-z][\w-]*)', text):
+            errors.append(f'{path}: 없는 스킬 /dev:{s}')
+    for a in re.findall(r'(?<![/\w])dev:([a-z][\w-]*)', text):
         if a not in agents and a not in skills:
-            errors.append(f'{path}: 없는 에이전트 devkit:{a}')
+            errors.append(f'{path}: 없는 에이전트 dev:{a}')
     for m in re.finditer(r'principles\.md 의 ', text):
         after = text[m.end():m.end() + 80]
         if not any(after.startswith(n) for n in principles):

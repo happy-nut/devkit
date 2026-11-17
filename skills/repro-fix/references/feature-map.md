@@ -2,7 +2,7 @@
 
 재현할 수 있는 사용자 기능을 모두 지도에 둔다. 앱을 몰기 전에 맞는 기능 파일을 읽는다. 지도는 사용자 시점으로 쓴다. 내부 구조와 지금 코드 경로는 지도에 얼리지 말고 실행할 때 찾는다.
 
-지도는 따로 만들지 않는다. `/devkit:verify-setup` 이 만든 `<저장소>/.claude/skills/verify-<앱>/features/` 가 지도다. 모양(README 색인과 기능마다 파일 하나, H2 넷 `Sub-features`, `How to get to it (user POV)`, `Driving it with <장치>`, `Gotchas`)은 [`../../verify-setup/references/feature-map-example/README.md`](../../verify-setup/references/feature-map-example/README.md) 를 따른다. 이 문서는 재현에 더 필요한 칸을 그 네 절 어디에 채우는지만 정한다. 설정의 `control.feature_map_path` 가 그 폴더를 가리키게 한다. 이 예시를 고치지 말고 그 스킬의 기능 파일에 채운다. 그 폴더는 검증 스킬이 소유하므로 팩을 새로 받아도 덮이지 않는다.
+지도는 따로 만들지 않는다. `/dev:verify-setup` 이 만든 `<저장소>/.claude/skills/verify-<앱>/features/` 가 지도다. 모양(README 색인과 기능마다 파일 하나, H2 넷 `Sub-features`, `How to get to it (user POV)`, `Driving it with <장치>`, `Gotchas`)은 [`../../verify-setup/references/feature-map-example/README.md`](../../verify-setup/references/feature-map-example/README.md) 를 따른다. 이 문서는 재현에 더 필요한 칸을 그 네 절 어디에 채우는지만 정한다. 설정의 `control.feature_map_path` 가 그 폴더를 가리키게 한다. 이 예시를 고치지 말고 그 스킬의 기능 파일에 채운다. 그 폴더는 검증 스킬이 소유하므로 팩을 새로 받아도 덮이지 않는다.
 
 ## 기능마다 채울 칸
 
