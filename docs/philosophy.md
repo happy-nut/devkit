@@ -68,7 +68,7 @@ kit 이 끝내 도달하려는 이상이다. 판단이 갈리면 이 이상에 �
 | 이 문서의 생각 | kit 의 장치 |
 |---|---|
 | 신뢰 피라미드, 공장보다 기초 | `/dev:mode` 의 「신뢰 피라미드」 절, `skills/mode/playbooks/autonomous-run.md` 0단계 |
-| 교정은 장치로 | `/dev:correct`, `/dev:mode` 의 「사용자에게 교정을 받음」 |
+| 교정은 장치로 | `/dev:correct`, `/dev:mode` 의 「사용자에게 교정을 받음」, `hooks/correction-stop.py` |
 | 주석은 탈출구 | `/dev:no-comments`, `hooks/no-new-comments.py` |
 | 런타임 검증과 기능 지도 | `/dev:verify-setup` |
 | 형식 검증과 상태 차트 | `/dev:formal-setup`, `/dev:statechart` |
