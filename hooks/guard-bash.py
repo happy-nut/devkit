@@ -14,7 +14,6 @@ def deny(why):
 
 
 def merge_gate(pr, cwd, repo=None):
-    """머지 직전에 바뀐 파일이 있는지, 체크가 다 붙고 다 초록인지 본다. 「no checks reported」는 초록이 아니다(체크가 아직 안 붙었을 수 있다)."""
     import subprocess, datetime
     sel = ["-R", repo] if repo else []
     try:
@@ -43,7 +42,6 @@ def merge_gate(pr, cwd, repo=None):
 
 m = re.search(r"\bgh\s+pr\s+merge\s+(\d+)(?![^\n;&|]*--auto)", cmd)
 if m:
-    # 훅은 명령을 돌리기 전에 판정하므로, 명령 맨 앞의 cd 와 --repo 를 직접 읽어 그 저장소의 PR 을 본다
     import os
     lead = re.match(r"\s*cd\s+(\S+)\s*&&", cmd)
     cwd = os.path.join(d.get("cwd") or ".", os.path.expanduser(lead.group(1))) if lead else d.get("cwd")
