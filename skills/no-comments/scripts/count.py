@@ -37,8 +37,8 @@ def py_blocks(text):
             if isinstance(body, list) and body and isinstance(body[0], ast.Expr) \
                     and isinstance(getattr(body[0], 'value', None), ast.Constant) and isinstance(body[0].value.value, str):
                 out.append((body[0].lineno, body[0].value.value.strip().split('\n')[0]))
-    except (SyntaxError, tokenize.TokenError):
-        return hash_blocks(text)
+    except (SyntaxError, tokenize.TokenError, IndentationError):
+        return hash_blocks(text) + [(i, l.strip()) for i, l in enumerate(text.splitlines(), 1) if l.strip()[:3] in ('"""', "'''") and len(l.strip()) > 3]
     return sorted(out)
 
 
@@ -54,7 +54,6 @@ def hash_blocks(text):
 
 
 def slash_blocks(text):
-    # ponytail: 정규식 리터럴 안의 // 는 주석으로 잘못 셀 수 있다. 틀리면 tree-sitter 로 바꾼다
     out, i, n, line, quote, prev_end = [], 0, len(text), 1, None, None
     while i < n:
         c = text[i]
@@ -90,7 +89,10 @@ def slash_blocks(text):
 
 
 def blocks(path):
-    text = open(path, encoding='utf-8', errors='replace').read()
+    return blocks_of(path, open(path, encoding='utf-8', errors='replace').read())
+
+
+def blocks_of(path, text):
     if path.endswith('.py'):
         return py_blocks(text)
     if path.endswith(HASH):

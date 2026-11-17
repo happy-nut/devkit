@@ -75,7 +75,6 @@ for path in glob.glob('skills/**/*', recursive=True) + glob.glob('agents/*.md'):
             if not any(os.path.exists(x) for x in (target, ref, near)):
                 errors.append(f'{path}: 없는 파일 {ref}')
 
-# 강연 철학이 빠지지 않게 붙잡는 자리
 REQUIRED = {
     'skills/mode/SKILL.md': ['## 신뢰 피라미드', '사용자에게 교정을 받음'],
     'skills/mode/playbooks/autonomous-run.md': ['0. 돌리기 전에 이 저장소가 믿을 만한지 본다.'],
@@ -91,13 +90,11 @@ for path in glob.glob('skills/**/*.md', recursive=True):
         if re.search(r'두 번[^.]{0,12}(지적|고치|교정)|(지적|교정)[^.]{0,12}두 번(?!째를 기다리지)', line):
             errors.append(f'{path}:{i}: 교정은 매번 굳힌다. 「두 번」 조건이 남음')
 
-# devkit 은 어디서나 쓰는 도구다. 특정 사람·앱·개인 도구 이름이 들어오지 않게 막는다.
 # 막을 낱말(정규식)은 저장소 밖 ~/.claude/devkit.json 의 personal.owners 와 private_words 에서 읽는다
 cfg_path = os.path.expanduser('~/.claude/devkit.json')
 cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {}
 words = cfg.get('personal', {}).get('owners', []) + cfg.get('private_words', [])
 SPECIFIC = re.compile('|'.join(words) if words else r'(?!)')
-# 저장소 전체(새 파일 포함)를 본다. 설치 주소에 꼭 필요한 GitHub 저장소 주소(origin)만 지우고 본다
 import subprocess
 origin = subprocess.run(['git', 'remote', 'get-url', 'origin'], capture_output=True, text=True).stdout.strip()
 slug = re.sub(r'^.*github\.com[:/]|\.git$', '', origin)
@@ -107,12 +104,10 @@ for path in tracked:
         for i, line in enumerate(open(path, errors='ignore').read().splitlines(), 1):
             if SPECIFIC.search(line.replace(slug, '') if slug else line):
                 errors.append(f'{path}:{i}: 특정 사람·앱·개인 도구 이름: {line.strip()[:80]}')
-# 공개 저장소라 커밋 작성자 메일도 드러난다. 로컬 설정이 있으면 GitHub noreply 메일이어야 한다
 email = subprocess.run(['git', 'config', 'user.email'], capture_output=True, text=True).stdout.strip()
 if email and not email.endswith('@users.noreply.github.com'):
     errors.append(f'git user.email 이 개인 메일이다. 이 저장소에선 GitHub noreply 메일을 쓴다: git config user.email <id>+<계정>@users.noreply.github.com')
 
-# 판은 끝자리만 1 씩 올린다(0.6.0 → 0.6.1). 고치는 중이면 HEAD 와, 커밋된 상태(CI)면 바로 앞 커밋과 견준다
 PJ = '.claude-plugin/plugin.json'
 def git_version(rev):
     r = subprocess.run(['git', 'show', f'{rev}:{PJ}'], capture_output=True, text=True)

@@ -27,7 +27,6 @@ with tempfile.TemporaryDirectory() as t:
     if run('korean-stop.py', {'transcript_path': p, 'stop_hook_active': True}):
         fails.append('korean-stop: 이미 한 번 막았으면 놓아줘야 함')
 
-# 도구 글: 사용자가 읽는 인자가 한국어인지, 질문은 하나인지
 for name, tool, inp, expect in [
     ('한국어 recap', 'mcp__ccd_turn__wrap_up', {'recap': '빈 PR 머지를 막는 훅을 넣었어요. `check.py` 가 통과했고 CI 는 아직 돌고 있어요.', 'actions': [{'label': 'PR 머지'}]}, False),
     ('영어 recap', 'mcp__ccd_turn__wrap_up', {'recap': 'Added the empty PR merge gate. check.py passes and CI is still running.'}, True),
@@ -58,7 +57,6 @@ for cmd, expect in [
     if ('deny' in run('guard-bash.py', {'tool_input': {'command': cmd}})) != expect:
         fails.append(f'guard-bash: {cmd[:40]}')
 
-# 머지 관문: 가짜 gh 로 세 상황을 만든다
 import datetime, stat
 with tempfile.TemporaryDirectory() as t:
     def fake_gh(checks_out, code, age_sec, files=1):
@@ -83,7 +81,6 @@ echo '{checks_out}'; exit {code}
         if ('deny' in r) != expect:
             fails.append(f'머지 관문: {name}')
 
-    # 다른 저장소의 PR: --repo 나 맨 앞 cd 를 따라가야 한다. 못 찾으면 「실패한 체크」가 아니라 못 찾았다고 말한다
     sub = os.path.join(t, 'other'); os.makedirs(sub)
     open(os.path.join(t, 'gh'), 'w').write(f"""#!/bin/sh
 case "$*" in *"-R o/r"*) ok=1;; esac
@@ -101,6 +98,26 @@ echo 'test	pass	1m'; exit 0
         r = subprocess.run([sys.executable, '-I', os.path.join(hooks, 'guard-bash.py')], input=json.dumps({'tool_input': {'command': cmd.replace('M ', 'gh pr ' + 'merge ')}, 'cwd': t}), capture_output=True, text=True, env=env).stdout
         if ('deny' in r) != expect or word not in r:
             fails.append(f'머지 관문: {name}')
+
+with tempfile.TemporaryDirectory() as t:
+    env = dict(os.environ, HOME=t)
+    py = os.path.join(t, 'a.py')
+    open(py, 'w').write('# Copyright 2026\nx = 1  # 있던 주석\n')
+    def gate(payload):
+        return 'deny' in subprocess.run([sys.executable, '-I', os.path.join(hooks, 'no-new-comments.py')], input=json.dumps(payload), capture_output=True, text=True, env=env).stdout
+    edit = {'tool_name': 'Edit', 'tool_input': {'file_path': py, 'old_string': 'x = 1  # 있던 주석', 'new_string': 'x = 2  # 있던 주석\n# 값을 2로 바꾼다\ny = x'}}
+    for name, payload, expect in [
+        ('새 서술 주석', edit, True),
+        ('같은 편집을 다시 보내면 통과', edit, False),
+        ('있던 주석을 옮기기만', {'tool_name': 'Edit', 'tool_input': {'file_path': py, 'old_string': 'x = 1  # 있던 주석', 'new_string': 'x = 3  # 있던 주석'}}, False),
+        ('링크 주석', {'tool_name': 'Edit', 'tool_input': {'file_path': py, 'old_string': 'x', 'new_string': '# https://example.com/spec\nx'}}, False),
+        ('새 파일의 docstring', {'tool_name': 'Write', 'tool_input': {'file_path': os.path.join(t, 'b.py'), 'content': 'def f():\n    """하는 일."""\n    return 1\n'}}, True),
+        ('기존 파일 덮어쓰기에 남은 주석', {'tool_name': 'Write', 'tool_input': {'file_path': py, 'content': '# Copyright 2026\nx = 5  # 있던 주석\n'}}, False),
+        ('ts 새 주석', {'tool_name': 'Edit', 'tool_input': {'file_path': os.path.join(t, 'c.ts'), 'old_string': 'a', 'new_string': 'a // 왜냐하면'}}, True),
+        ('마크다운은 보지 않음', {'tool_name': 'Write', 'tool_input': {'file_path': os.path.join(t, 'd.md'), 'content': '# 제목\n'}}, False),
+    ]:
+        if gate(payload) != expect:
+            fails.append(f'새 주석 관문: {name}')
 
 if fails:
     sys.exit('훅 시험 실패:\n' + '\n'.join(fails))
