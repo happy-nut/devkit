@@ -172,7 +172,7 @@ python3 scripts/check.py
 git config core.hooksPath .githooks
 ```
 
-`.claude-plugin/plugin.json` 의 `version` 은 끝자리만 1 씩 올린다(0.6.2 에서 0.6.3). 다른 자리를 올리거나 2 이상 건너뛰면 `check.py` 와 CI 가 막는다.
+`.claude-plugin/plugin.json` 의 `version` 은 끝자리만 1 씩 올린다(0.6.2 에서 0.6.3). 다른 자리를 올리거나 2 이상 건너뛰면 `check.py` 와 CI 가 막는다. 그 판으로 태그·GitHub Release 를 만드는 것도 `main` 에 push 될 때 `.github/workflows/release.yml` 이 자동으로 한다. 사람이나 에이전트가 따로 `gh release create` 를 부를 필요가 없다(판만 올리고 릴리즈를 깜빡하는 실수를 CI 가 대신한다).
 
 스킬에 문장을 더 쓰기 전에, 검사나 구조로 막을 수 있는지 먼저 본다.
 
