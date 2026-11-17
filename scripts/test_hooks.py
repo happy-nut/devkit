@@ -83,6 +83,25 @@ echo '{checks_out}'; exit {code}
         if ('deny' in r) != expect:
             fails.append(f'머지 관문: {name}')
 
+    # 다른 저장소의 PR: --repo 나 맨 앞 cd 를 따라가야 한다. 못 찾으면 「실패한 체크」가 아니라 못 찾았다고 말한다
+    sub = os.path.join(t, 'other'); os.makedirs(sub)
+    open(os.path.join(t, 'gh'), 'w').write(f"""#!/bin/sh
+case "$*" in *"-R o/r"*) ok=1;; esac
+[ "$(pwd -P)" = "$(cd {sub} && pwd -P)" ] && ok=1
+[ -z "$ok" ] && {{ echo 'GraphQL: Could not resolve to a PullRequest with the number of 42.' >&2; exit 1; }}
+if [ "$2" = "view" ]; then echo '{{"createdAt":"2020-01-01T00:00:00Z","files":[{{"path":"a"}}]}}'; exit 0; fi
+echo 'test	pass	1m'; exit 0
+""")
+    for name, cmd, expect, word in [
+        ('--repo 로 다른 저장소', 'M 42 --repo o/r --squash', False, ''),
+        ('-R 로 다른 저장소', 'M 42 -R o/r --squash', False, ''),
+        ('맨 앞 cd 로 다른 저장소', f'cd {sub} && M 42 --squash', False, ''),
+        ('이 폴더에 없는 PR', 'M 42 --squash', True, '못 찾았다'),
+    ]:
+        r = subprocess.run([sys.executable, '-I', os.path.join(hooks, 'guard-bash.py')], input=json.dumps({'tool_input': {'command': cmd.replace('M ', 'gh pr ' + 'merge ')}, 'cwd': t}), capture_output=True, text=True, env=env).stdout
+        if ('deny' in r) != expect or word not in r:
+            fails.append(f'머지 관문: {name}')
+
 if fails:
     sys.exit('훅 시험 실패:\n' + '\n'.join(fails))
 print('훅 시험 OK')
