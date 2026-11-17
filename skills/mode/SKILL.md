@@ -133,6 +133,7 @@ devkit 자체가 4층이다. devkit 의 진짜 일은 각 저장소의 1~3층을
 - 플레이북 단계 안에서 띄우는 서브에이전트는 `subagent_type: "devkit:worker"`. 플레이북 자체를 워커에게 돌리게 하지 않는다. 이 대화가 플레이북과 작업 목록과 모든 위임을 갖는다. 자기 서브에이전트를 정하는 스킬(`/devkit:swarm`, `/devkit:review`, `/devkit:design`)은 그대로 둔다.
 - 기본: `run_in_background: true`, 내용 붙여 넣기 대신 파일 경로, 역할마다 모델을 정한다. 코드·판단·글은 `opus`, 가장 어려운 일(교차 설계, 까다로운 동시성, 미묘한 알고리즘)은 `fable`, 검증·기계적 편집·넓게 읽기는 `sonnet`.
 - `~/.claude/devkit.json` 의 `models` 가 있으면 그것을 쓴다(`code`·`hardest`·`mechanical` 은 위 세 역할, `panel` 은 `/devkit:design`·`/devkit:review` 의 러너·검토자 목록. 없는 키는 위 기본값, `/devkit:setup` 이 쓴다).
+- `Agent` 가 지정한 모델을 못 찾거나 거부하면 `model` 을 빼고 다시 불러 지금 세션의 모델을 그대로 승계하고 그렇게 말한다. 서브에이전트를 못 띄운 채 멈추지 않는다.
 - 넓게 읽는 일과 오래 걸리는 수집은 서브에이전트에 준다. 이 스레드는 결론만 갖는다(principles.md 의 Guard the Context Window).
 - 병렬로 쓰는 워커는 `isolation: "worktree"` 로 서로 다른 파일을 갖게 한다.
 - 결과의 책임은 이 대화에 있다. diff 와 산출물을 직접 보고 요약은 직접 쓴다. 두 번째 의견은 같은 브리프를 다른 모델에. 둘이 맞으면 강한 신호다.
