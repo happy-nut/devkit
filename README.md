@@ -2,7 +2,7 @@
 
 `dev` 는 Claude Code 에이전트가 한 일을 믿을 수 있게 만드는 플러그인이고, 이 저장소 `happy-nut/kit` 이 그 마켓플레이스다. 에이전트는 일의 종류마다 정해 둔 단계(플레이북)를 따르고, 판단이 갈리면 원칙 문서를 읽는다. 「됐다」는 보고는 직접 돌려 본 증거가 있을 때만 받는다. 에이전트가 틀려서 교정하면, 같은 실수를 글 대신 구조, 검사, 훅으로 막는다.
 
-출발점은 Lauren Tan 의 강연 「All Code Is Slop (Except Mine)」(2026-11)과 그가 공개한 pstack(MIT)이다. 강연은 남의 설정을 그대로 쓰지 말고 포크해서 자기 교정 기록으로 키우라고 한다. 이 저장소가 그렇게 키운 포크다. 스킬과 문서는 한국어로 쓰고, 에이전트가 사용자에게 한국어로 말하게 하는 훅이 들어 있다.
+출발점은 Lauren Tan 의 강연 「All Code Is Slop (Except Mine)」(2026-11)과 그가 공개한 pstack(MIT)이다. 강연은 남의 설정을 그대로 쓰지 말고 포크해서 자기 교정 기록으로 키우라고 한다. 이 저장소가 그렇게 키운 포크다. 강연이 말하는 최종 이상(high trust 루프)과 거기로 가는 길은 [`docs/philosophy.md`](docs/philosophy.md) 에 정리했고, 판단이 갈리면 그 이상에 가까워지는 쪽을 고른다. 스킬과 문서는 한국어로 쓰고, 에이전트가 사용자에게 한국어로 말하게 하는 훅이 들어 있다.
 
 ## 설치한다
 
@@ -60,6 +60,7 @@ skills/<이름>/SKILL.md           /dev:<이름> 으로 부르는 스킬. mode �
 agents/                          서브에이전트 dev:worker, dev:comment-reviewer
 hooks/                           설치하면 켜지는 훅
 scripts/check.py                 저장소 검사
+docs/philosophy.md               최종 이상(high trust 루프)과 거기로 가는 길
 docs/authoring.md                이 저장소를 고치는 규칙
 ```
 
