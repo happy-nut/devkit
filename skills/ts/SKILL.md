@@ -1,6 +1,6 @@
 ---
 name: ts
-description: "TypeScript 를 읽거나 고칠 때의 규칙: 판별 유니온, 브랜드 타입, as 금지, 경계에서 스키마로 파싱, 완전성 검사. Use when reading or editing any .ts or .tsx file, \"typescript best practices\", reviewing TypeScript types. /devkit:ts"
+description: "TypeScript 를 읽거나 고칠 때의 규칙: 판별 유니온, 브랜드 타입, as 금지, 경계에서 스키마로 파싱, 완전성 검사. Use when reading or editing any .ts or .tsx file, \"typescript best practices\", reviewing TypeScript types. /dev:ts"
 paths: ["**/*.ts", "**/*.tsx"]
 disable-model-invocation: true
 ---

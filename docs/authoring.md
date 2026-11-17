@@ -5,12 +5,12 @@ devkit 은 Claude Code 전용 작업 방식 플러그인이다. pstack(MIT, Laur
 ## 구조
 
 ```
-skills/mode/SKILL.md            라우터. /devkit:mode
+skills/mode/SKILL.md            라우터. /dev:mode
 skills/mode/principles.md       원칙 전부(한 파일)
 skills/mode/playbooks/<이름>.md  플레이북
 skills/mode/references/         플레이북이 쓰는 참고 문서
 skills/mode/scripts/            플레이북이 쓰는 스크립트
-skills/<스킬>/SKILL.md           사람이 /devkit:<스킬> 로 부르는 워크플로 스킬
+skills/<스킬>/SKILL.md           사람이 /dev:<스킬> 로 부르는 워크플로 스킬
 agents/<이름>.md                 서브에이전트(subagent_type 은 devkit:<이름>)
 scripts/check.py                저장소 검사. 고치면 반드시 돌린다
 ```
@@ -48,7 +48,7 @@ scripts/check.py                저장소 검사. 고치면 반드시 돌린다
 | Orchestrate 플레이북 | `mode` 의 `playbooks/orchestrate.md` | Project tracker 대신 git 밖 노트 파일, 워커는 `Agent` |
 | benny(자동화 팩) | `triage` + `repro-fix` | Cursor Automations 대신 Claude Code 루틴 |
 
-다른 스킬을 가리킬 때는 이름(`/devkit:design`)으로, 같은 스킬 안 파일은 그 SKILL.md 기준 상대 경로(`playbooks/bug-fix.md`)로, 다른 스킬의 파일은 `../<스킬>/...` 로 쓴다. pstack 이름(poteto, pstack, principle-*)은 본문에 남기지 않는다.
+다른 스킬을 가리킬 때는 이름(`/dev:design`)으로, 같은 스킬 안 파일은 그 SKILL.md 기준 상대 경로(`playbooks/bug-fix.md`)로, 다른 스킬의 파일은 `../<스킬>/...` 로 쓴다. pstack 이름(poteto, pstack, principle-*)은 본문에 남기지 않는다.
 
 ## Claude Code 로 옮겨 쓰기
 
@@ -82,15 +82,15 @@ scripts/check.py                저장소 검사. 고치면 반드시 돌린다
 
 - 본문은 한국어. 짧은 평서문, 한 문장 한 생각. 긴 대시(—) 쓰지 않는다.
 - 에이전트가 읽는 글이다. 비유·수사 없이 할 일과 판단 기준만. 원문에 있던 구체 기준·숫자·예외는 빠뜨리지 않는다(번역하면서 줄이지 않는다).
-- frontmatter: `name`, `description`(한 줄, 따옴표. 한국어 뜻 + 영어 트리거 문구 + `/devkit:<이름>`), `disable-model-invocation: true`.
+- frontmatter: `name`, `description`(한 줄, 따옴표. 한국어 뜻 + 영어 트리거 문구 + `/dev:<이름>`), `disable-model-invocation: true`.
 - Cursor 전용이라 Claude Code 에서 못 하는 단계는 지우거나 위 표대로 바꾼다. 「Skipped」 같은 줄을 남기지 않는다.
 
 ## 이 사용자의 규칙 (모든 파일에 녹인다)
 
-- 저장소 구분: 개인 목록은 devkit 밖 `~/.claude/devkit.json` 에(없으면 모두 회사). 본문에서는 `/devkit:mode` 의 「저장소 구분」을 가리키기만 한다. 사람·앱·개인 도구 이름을 devkit 에 쓰지 않는다(`check.py` 가 막는다). 개인은 「고쳐」가 머지까지, 「배포」가 배포 뒤 확인까지. 회사는 머지·배포·공유 브랜치 push·팀 채팅·티켓 쓰기를 사용자가 그 말을 했을 때만.
+- 저장소 구분: 개인 목록은 devkit 밖 `~/.claude/devkit.json` 에(없으면 모두 회사). 본문에서는 `/dev:mode` 의 「저장소 구분」을 가리키기만 한다. 사람·앱·개인 도구 이름을 devkit 에 쓰지 않는다(`check.py` 가 막는다). 개인은 「고쳐」가 머지까지, 「배포」가 배포 뒤 확인까지. 회사는 머지·배포·공유 브랜치 push·팀 채팅·티켓 쓰기를 사용자가 그 말을 했을 때만.
 - 갈림길은 묻지 않는다. 실행해 알 수 있으면 프로토타입으로 정하고, 아니면 가장 나은 쪽으로 하고 이유를 보고한다. 질문은 취향·제품 결정 하나만.
 - 질문·「논의하자」에는 답만. 바꾸지 않는다.
 - 「됐다」는 눈으로 본 결과다. 화면 변경은 실제로 띄워 기능마다 스크린샷. 백엔드 값만 보지 말고 화면 값까지.
-- 교정을 받을 때마다 장치로 막는다(`/devkit:correct`). 두 번째를 기다리지 않는다.
+- 교정을 받을 때마다 장치로 막는다(`/dev:correct`). 두 번째를 기다리지 않는다.
 - 사용자에게 하는 말은 한국어. 손님이 읽는 한국어 글은 korean-humanizer 를 거쳐 승인받는다.
 - 저장소의 `AGENTS.md`·`CLAUDE.md` 가 devkit 보다 앞선다.

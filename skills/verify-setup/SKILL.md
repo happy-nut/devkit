@@ -1,6 +1,6 @@
 ---
 name: verify-setup
-description: "앱을 사용자처럼 몰아 동작을 증명하는 프로젝트 전용 검증 스킬(<저장소>/.claude/skills/verify-<앱>/)을 만들고, 앱이 바뀌면 기능 지도를 다시 맞춘다. 언어·프레임워크·플랫폼 무관. Use for /devkit:verify-setup, \"make a verify skill for this repo\", \"audit the verify skill\", or when a project has no scripted way to prove UI/CLI/service behavior."
+description: "앱을 사용자처럼 몰아 동작을 증명하는 프로젝트 전용 검증 스킬(<저장소>/.claude/skills/verify-<앱>/)을 만들고, 앱이 바뀌면 기능 지도를 다시 맞춘다. 언어·프레임워크·플랫폼 무관. Use for /dev:verify-setup, \"make a verify skill for this repo\", \"audit the verify skill\", or when a project has no scripted way to prove UI/CLI/service behavior."
 disable-model-invocation: true
 ---
 
@@ -51,7 +51,7 @@ disable-model-invocation: true
 
 ## 5. 커밋하고 유지를 알린다
 
-만든 스킬을 커밋하고 PR 을 연다. 개인 저장소면 머지까지, 회사 저장소면 PR 까지다. 사용자에게 앱이 바뀌면 `/devkit:verify-setup` 을 다시 부르면 「유지」로 지도를 맞춘다고 한 줄 알린다. 주기는 사용자가 물을 때만 제안한다.
+만든 스킬을 커밋하고 PR 을 연다. 개인 저장소면 머지까지, 회사 저장소면 PR 까지다. 사용자에게 앱이 바뀌면 `/dev:verify-setup` 을 다시 부르면 「유지」로 지도를 맞춘다고 한 줄 알린다. 주기는 사용자가 물을 때만 제안한다.
 
 ## 6. 더 깊은 층은 필요할 때 제안한다
 
@@ -61,7 +61,7 @@ disable-model-invocation: true
 - **알고리즘의 성질** (가상화 목록이 깜빡이지 않음, 정렬·병합이 순서를 지킴): Lean 같은 증명 도구로 핵심 함수의 성질을 증명한다.
 - **웹 UI 를 무작위로 탐색하며 성질 확인**: Bombadil(Antithesis, 웹 UI 속성 기반 테스트, TypeScript 스펙). 「화면에 보이는 숫자와 상태가 늘 맞다」 같은 성질을 적어 두면 사람이 생각 못 한 순서로 눌러 본다. 초기 위반 상당수는 스펙 오류라 먼저 스펙을 의심한다.
 
-형식 검증도 은탄환이 아니다. 피라미드의 한 층이다. 필요가 확인되면 `/devkit:formal-setup` 으로 그 영역의 형식 검증 스킬을 만든다.
+형식 검증도 은탄환이 아니다. 피라미드의 한 층이다. 필요가 확인되면 `/dev:formal-setup` 으로 그 영역의 형식 검증 스킬을 만든다.
 
 # 유지
 

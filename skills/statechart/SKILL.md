@@ -1,6 +1,6 @@
 ---
 name: statechart
-description: "상태 사이를 오가는 시스템(제품 흐름, 프로토콜, 서비스)의 TLA+ 모델을 TLC 로 검사하고 Mermaid 상태 차트로 그린다. 보고서는 규칙을 어기는 상태마다 가장 짧은 경로를 준다. Use for /devkit:statechart, to check a TLA+ model and draw it as a statechart, or to show a bug as a path through states."
+description: "상태 사이를 오가는 시스템(제품 흐름, 프로토콜, 서비스)의 TLA+ 모델을 TLC 로 검사하고 Mermaid 상태 차트로 그린다. 보고서는 규칙을 어기는 상태마다 가장 짧은 경로를 준다. Use for /dev:statechart, to check a TLA+ model and draw it as a statechart, or to show a bug as a path through states."
 disable-model-invocation: true
 ---
 

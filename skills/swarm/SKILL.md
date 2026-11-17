@@ -1,12 +1,12 @@
 ---
 name: swarm
-description: "워커 N개를 병렬로 풀어 끝까지 거둔 뒤 보고서 하나로 돌려준다. 조각 나눠 덮기, 같은 브리프로 경주, 혼합. Use for 'swarm this', parallel coverage, races, gauntlets, and exploration. /devkit:swarm"
+description: "워커 N개를 병렬로 풀어 끝까지 거둔 뒤 보고서 하나로 돌려준다. 조각 나눠 덮기, 같은 브리프로 경주, 혼합. Use for 'swarm this', parallel coverage, races, gauntlets, and exploration. /dev:swarm"
 disable-model-invocation: true
 ---
 
 # 스웜
 
-`/devkit:design` 의 경쟁 절차와 달리 결과를 하나로 합성하지 않는다. 덮기(coverage)나 경주(race)의 결과를 모아 보고한다.
+`/dev:design` 의 경쟁 절차와 달리 결과를 하나로 합성하지 않는다. 덮기(coverage)나 경주(race)의 결과를 모아 보고한다.
 
 ## 시작
 
@@ -22,11 +22,11 @@ disable-model-invocation: true
 1. 완료 조건과, 스웜이 돌려줄 산출물이나 보고서를 적는다.
 2. 모양을 고른다. 조각으로 나누기(slices), 같은 브리프로 워커 N개 경주(race), 또는 둘을 섞기. 경주나 혼합이면 띄우기 전에 선정 규칙을 선언한다. `first pass`(처음 통과한 것), `rank all`(모두 순위), `best-of`(가장 좋은 것) 가운데 하나.
 3. 워커 모델을 고른다. 기본은 `sonnet` 이다. 워커 일이 판단이나 글이면 `opus`, 가장 어려운 일(교차 설계, 까다로운 동시성, 미묘한 알고리즘)이면 `fable` 로 올린다. 모델 경주면 팔(arm)마다 모델을 미리 적는다. `Agent` 가 모델을 거부하면 `sonnet` 으로 돌리고 그렇게 말한다.
-4. 쓰는 워커에게는 각자 쓸 수 있는 출력 위치를 준다. 워커가 커밋을 검증하거나 측정하면 브리프에 정확한 SHA 를 적는다. 측정 브리프에는 방법(표본 수, 표본 하나가 무엇인지, 순서)도 적는다. 워커는 결과에 SHA 와 방법을 둘 다 기록한다. 측정은 `/devkit:bench` 기준을 따른다.
+4. 쓰는 워커에게는 각자 쓸 수 있는 출력 위치를 준다. 워커가 커밋을 검증하거나 측정하면 브리프에 정확한 SHA 를 적는다. 측정 브리프에는 방법(표본 수, 표본 하나가 무엇인지, 순서)도 적는다. 워커는 결과에 SHA 와 방법을 둘 다 기록한다. 측정은 `/dev:bench` 기준을 따른다.
 
 ## B. Fan out
 
-N개를 한 메시지에서 모두 띄운다. 각 호출은 `subagent_type: "devkit:worker"`, `isolation: "worktree"`, `run_in_background: true`, 그리고 3번의 `model`.
+N개를 한 메시지에서 모두 띄운다. 각 호출은 `subagent_type: "dev:worker"`, `isolation: "worktree"`, `run_in_background: true`, 그리고 3번의 `model`.
 
 `isolation` 은 워커가 이 컴퓨터의 작업 폴더 상태 그대로(커밋하지 않은 변경, 돌고 있는 서버, 로컬 데이터)를 봐야 할 때만 뺀다. 그때는 워커끼리 같은 파일을 쓰지 않게 출력 위치를 나눈다.
 

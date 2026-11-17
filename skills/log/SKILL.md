@@ -1,6 +1,6 @@
 ---
 name: log
-description: "오래 걸리거나 사람 없이 도는 일의 결정 기록을 남긴다. 결정마다 한 줄(무엇을, 왜, 근거, 결과)인 TSV 하나. 기본은 로컬, 리뷰어가 결과를 믿는 데 기록이 필요할 때만 커밋한다. Use for /devkit:log, \"show me your work\", \"keep a decision log\", autonomous or multi-phase runs, or work a human reviews after stepping away."
+description: "오래 걸리거나 사람 없이 도는 일의 결정 기록을 남긴다. 결정마다 한 줄(무엇을, 왜, 근거, 결과)인 TSV 하나. 기본은 로컬, 리뷰어가 결과를 믿는 데 기록이 필요할 때만 커밋한다. Use for /dev:log, \"show me your work\", \"keep a decision log\", autonomous or multi-phase runs, or work a human reviews after stepping away."
 disable-model-invocation: true
 ---
 
@@ -33,7 +33,7 @@ ts	phase	decision	why	evidence	result
 
 ## 한 줄 쓰기
 
-동료에게 무엇을 했는지 말하듯 쓴다. 쉬운 말, 구체 행동, AI 말투와 추상 용어 없이 쓴다. 기록 글에도 /devkit:write 가 적용된다.
+동료에게 무엇을 했는지 말하듯 쓴다. 쉬운 말, 구체 행동, AI 말투와 추상 용어 없이 쓴다. 기록 글에도 /dev:write 가 적용된다.
 
 도우미를 쓴다.
 
@@ -87,4 +87,4 @@ ts	phase	decision	why	evidence	result
 
 ## 다른 스킬에서 쓰기
 
-다른 스킬은 기록을 따로 만들지 않고 이 스킬로 보낸다. 이름(/devkit:log)으로 가리키고 형식은 이 스킬에 맡긴다. 열 이름을 다시 쓰지 않는다.
+다른 스킬은 기록을 따로 만들지 않고 이 스킬로 보낸다. 이름(/dev:log)으로 가리키고 형식은 이 스킬에 맡긴다. 열 이름을 다시 쓰지 않는다.

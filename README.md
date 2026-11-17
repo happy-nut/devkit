@@ -10,22 +10,22 @@ Claude Code 가 설치되어 있어야 한다. 훅은 `python3` 으로 돌고, P
 
 ```bash
 claude plugin marketplace add happy-nut/devkit
-claude plugin install devkit@devkit
+claude plugin install dev@kit
 ```
 
 서드파티 마켓플레이스는 자동 업데이트가 꺼져 있다. 새 판은 직접 받는다.
 
 ```bash
-claude plugin update devkit@devkit
+claude plugin update dev@kit
 ```
 
 ## 처음 써 보기
 
-할 일 앞에 `/devkit:mode` 를 붙인다.
+할 일 앞에 `/dev:mode` 를 붙인다.
 
 ```
-/devkit:mode 버튼 색이 화면마다 달라
-/devkit:mode 이 PR 머지까지 해
+/dev:mode 버튼 색이 화면마다 달라
+/dev:mode 이 PR 머지까지 해
 ```
 
 그러면 에이전트가 다음을 한다.
@@ -37,24 +37,24 @@ claude plugin update devkit@devkit
 
 무엇을 원하는지와 「됐다」를 어떻게 알 수 있는지만 적으면 된다. 방법은 적지 않는다.
 
-에이전트가 틀리면 대화로 지적한다. 「이거 틀렸어, 원래 X 여야 해」처럼 말한다. `/devkit:mode` 중이면 고치는 데서 끝나지 않고, 같은 실수가 다시 나오지 못하게 막는 장치를 넣은 뒤 어느 층에 넣었는지 보고한다. 모드 밖이면 `/devkit:correct <지적>` 을 쓴다.
+에이전트가 틀리면 대화로 지적한다. 「이거 틀렸어, 원래 X 여야 해」처럼 말한다. `/dev:mode` 중이면 고치는 데서 끝나지 않고, 같은 실수가 다시 나오지 못하게 막는 장치를 넣은 뒤 어느 층에 넣었는지 보고한다. 모드 밖이면 `/dev:correct <지적>` 을 쓴다.
 
-devkit 자체가 마음에 안 들면 `/devkit:reflect <무엇이 별로였나>` 를 쓴다. devkit 저장소(포크)를 고쳐 PR 로 올린다.
+devkit 자체가 마음에 안 들면 `/dev:reflect <무엇이 별로였나>` 를 쓴다. devkit 저장소(포크)를 고쳐 PR 로 올린다.
 
 방향만 바꾸려면 원칙 이름을 댄다. 「Prove It Works 로 다시 봐」(실제로 돌려 증명), 「Fix Root Causes」(땜질 말고 원인), 「Laziness Protocol」(더 작게).
 
-무엇을 쓸지 모르겠으면 `/devkit:help` 에 물어본다.
+무엇을 쓸지 모르겠으면 `/dev:help` 에 물어본다.
 
 ## 구성
 
 ```
-skills/mode/SKILL.md             /devkit:mode. 플레이북을 고르는 라우터
+skills/mode/SKILL.md             /dev:mode. 플레이북을 고르는 라우터
 skills/mode/principles.md        원칙 24개(한 파일, 절마다 ## 영어 이름)
 skills/mode/playbooks/           플레이북 23개
 skills/mode/references/          플레이북이 읽는 참고 문서
 skills/mode/scripts/             플레이북이 돌리는 스크립트
-skills/<이름>/SKILL.md           /devkit:<이름> 으로 부르는 스킬(mode 포함 25개)
-agents/                          서브에이전트 devkit:worker, devkit:comment-reviewer
+skills/<이름>/SKILL.md           /dev:<이름> 으로 부르는 스킬(mode 포함 25개)
+agents/                          서브에이전트 dev:worker, dev:comment-reviewer
 hooks/                           설치하면 자동으로 켜지는 훅
 scripts/check.py                 저장소 검사
 docs/authoring.md                devkit 을 고치는 규칙
@@ -77,57 +77,57 @@ docs/authoring.md                devkit 을 고치는 규칙
 
 ## 스킬
 
-스킬은 모두 `/devkit:<이름>` 으로 직접 부를 때만 돈다. `/devkit:mode` 가 플레이북 단계에서 필요한 스킬을 대신 부르기도 한다.
+스킬은 모두 `/dev:<이름>` 으로 직접 부를 때만 돈다. `/dev:mode` 가 플레이북 단계에서 필요한 스킬을 대신 부르기도 한다.
 
 일을 시키고 나누는 스킬이다.
 
 | 스킬 | 하는 일 |
 |---|---|
-| `/devkit:mode` | 플레이북을 고르고 단계대로 일한다 |
-| `/devkit:design` | 여러 설계를 병렬로 그려 보고, 하나를 기반으로 골라 다른 안의 좋은 점을 붙인다 |
-| `/devkit:swarm` | 일을 독립 조각으로 나눠 병렬로 풀고 PASS, ISSUES, BLOCKED 로 모은다 |
-| `/devkit:review` | 여러 모델이 변경을 적대적으로 깨 보고, 실행으로 증명된 것만 보고한다. 파급 범위도 본다 |
+| `/dev:mode` | 플레이북을 고르고 단계대로 일한다 |
+| `/dev:design` | 여러 설계를 병렬로 그려 보고, 하나를 기반으로 골라 다른 안의 좋은 점을 붙인다 |
+| `/dev:swarm` | 일을 독립 조각으로 나눠 병렬로 풀고 PASS, ISSUES, BLOCKED 로 모은다 |
+| `/dev:review` | 여러 모델이 변경을 적대적으로 깨 보고, 실행으로 증명된 것만 보고한다. 파급 범위도 본다 |
 
 실수를 막고 품질을 지키는 스킬이다.
 
 | 스킬 | 하는 일 |
 |---|---|
-| `/devkit:correct` | 에이전트의 반복 실수를 구조, 린트, 테스트로 막는다. 새 검사가 과거 실수에서 실패하는지 증명한다 |
-| `/devkit:tdd` | 버그를 실패하는 회귀 테스트로 먼저 만든다. 싸고 분명할 때만 쓴다 |
-| `/devkit:bench` | 성능 숫자를 믿거나 보고하기 전에 점검한다 |
-| `/devkit:no-comments` | 주석을 심사해 지우고, 주석이 가리던 우회 코드를 고친다 |
-| `/devkit:ts` | `.ts`, `.tsx` 를 고칠 때 쓰는 TypeScript 규칙 |
-| `/devkit:write` | 한국어 글(문서, README, PR 설명, 커밋 메시지) 규칙 |
+| `/dev:correct` | 에이전트의 반복 실수를 구조, 린트, 테스트로 막는다. 새 검사가 과거 실수에서 실패하는지 증명한다 |
+| `/dev:tdd` | 버그를 실패하는 회귀 테스트로 먼저 만든다. 싸고 분명할 때만 쓴다 |
+| `/dev:bench` | 성능 숫자를 믿거나 보고하기 전에 점검한다 |
+| `/dev:no-comments` | 주석을 심사해 지우고, 주석이 가리던 우회 코드를 고친다 |
+| `/dev:ts` | `.ts`, `.tsx` 를 고칠 때 쓰는 TypeScript 규칙 |
+| `/dev:write` | 한국어 글(문서, README, PR 설명, 커밋 메시지) 규칙 |
 
 코드와 작업 맥락을 이해하는 스킬이다.
 
 | 스킬 | 하는 일 |
 |---|---|
-| `/devkit:how` | 코드가 어떻게 도는지, 무엇을 어디에 둘지 설명한다 |
-| `/devkit:why` | 커밋, PR, 이슈에서 근거를 찾아 왜 이렇게 됐는지 답한다 |
-| `/devkit:recall` | 며칠 전 작업의 맥락을 대화 기록에서 되살린다 |
-| `/devkit:catchup` | 자리를 비운 사이 바뀐 것과 사용자가 정할 것만 짧게 보고한다 |
-| `/devkit:catchup-video` | catchup 을 자막 달린 짧은 영상으로 만든다 |
-| `/devkit:log` | 긴 자율 작업의 결정 기록을 TSV 한 파일로 남긴다 |
+| `/dev:how` | 코드가 어떻게 도는지, 무엇을 어디에 둘지 설명한다 |
+| `/dev:why` | 커밋, PR, 이슈에서 근거를 찾아 왜 이렇게 됐는지 답한다 |
+| `/dev:recall` | 며칠 전 작업의 맥락을 대화 기록에서 되살린다 |
+| `/dev:catchup` | 자리를 비운 사이 바뀐 것과 사용자가 정할 것만 짧게 보고한다 |
+| `/dev:catchup-video` | catchup 을 자막 달린 짧은 영상으로 만든다 |
+| `/dev:log` | 긴 자율 작업의 결정 기록을 TSV 한 파일로 남긴다 |
 
 프로젝트별 검증을 만드는 스킬이다.
 
 | 스킬 | 하는 일 |
 |---|---|
-| `/devkit:verify-setup` | 앱을 사용자처럼 몰아 증명하는 프로젝트 전용 검증 스킬을 만들고 유지한다 |
-| `/devkit:formal-setup` | 버그가 가장 비싼 코드를 형식 검증(TLA+ 등)하는 프로젝트 전용 스킬을 만들고 유지한다 |
-| `/devkit:statechart` | TLA+ 모델을 TLC 로 검사하고, 규칙이 깨지는 최단 경로를 Mermaid 상태 차트로 그린다 |
+| `/dev:verify-setup` | 앱을 사용자처럼 몰아 증명하는 프로젝트 전용 검증 스킬을 만들고 유지한다 |
+| `/dev:formal-setup` | 버그가 가장 비싼 코드를 형식 검증(TLA+ 등)하는 프로젝트 전용 스킬을 만들고 유지한다 |
+| `/dev:statechart` | TLA+ 모델을 TLC 로 검사하고, 규칙이 깨지는 최단 경로를 Mermaid 상태 차트로 그린다 |
 
 운영과 설정을 돕는 스킬이다.
 
 | 스킬 | 하는 일 |
 |---|---|
-| `/devkit:reflect` | 반복되는 교정과 선호를 찾아 devkit 을 고치는 PR 을 올린다 |
-| `/devkit:triage` | 채널에 올라온 이슈 보고를 분류해 스레드에 판정 답글 하나를 남긴다 |
-| `/devkit:repro-fix` | 분류된 버그를 실제 UI 에서 재현하고, 재현된 뒤에만 초안 수정 PR 을 낸다 |
-| `/devkit:bot-ui` | 누르면 Claude Code 루틴을 깨우는 로컬 페이지를 만든다 |
-| `/devkit:setup` | `~/.claude/devkit.json` 을 만들거나 고친다 |
-| `/devkit:help` | 상황에 맞는 스킬을 고르고 보낼 프롬프트를 준다 |
+| `/dev:reflect` | 반복되는 교정과 선호를 찾아 devkit 을 고치는 PR 을 올린다 |
+| `/dev:triage` | 채널에 올라온 이슈 보고를 분류해 스레드에 판정 답글 하나를 남긴다 |
+| `/dev:repro-fix` | 분류된 버그를 실제 UI 에서 재현하고, 재현된 뒤에만 초안 수정 PR 을 낸다 |
+| `/dev:bot-ui` | 누르면 Claude Code 루틴을 깨우는 로컬 페이지를 만든다 |
+| `/dev:setup` | `~/.claude/devkit.json` 을 만들거나 고친다 |
+| `/dev:help` | 상황에 맞는 스킬을 고르고 보낼 프롬프트를 준다 |
 
 ## 훅
 
@@ -143,7 +143,7 @@ docs/authoring.md                devkit 을 고치는 규칙
 
 ## 개인 설정
 
-선택 사항이다. 저장소 밖 `~/.claude/devkit.json` 에 둔다. `/devkit:setup` 이 만들어 준다.
+선택 사항이다. 저장소 밖 `~/.claude/devkit.json` 에 둔다. `/dev:setup` 이 만들어 준다.
 
 ```json
 {

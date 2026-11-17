@@ -1,6 +1,6 @@
 ---
 name: write
-description: "한국어 글(문서, README, RFC, PR 설명, 커밋 메시지, 보고, 에이전트용 글)을 쓰거나 고칠 때의 기준. AI 티(번역체, 상투어, 명사화, 과장, 억지 대구, 마무리 상투구, 긴 대시)를 걷어내고 피곤한 엔지니어가 한 번에 읽게 쓴다. 손님이 읽는 글은 korean-humanizer 로 넘겨 승인받는다. Use for /devkit:write, \"unslop\", \"technical writing\", \"cut AI tells\", writing or reviewing docs, readmes, PR descriptions, commit messages."
+description: "한국어 글(문서, README, RFC, PR 설명, 커밋 메시지, 보고, 에이전트용 글)을 쓰거나 고칠 때의 기준. AI 티(번역체, 상투어, 명사화, 과장, 억지 대구, 마무리 상투구, 긴 대시)를 걷어내고 피곤한 엔지니어가 한 번에 읽게 쓴다. 손님이 읽는 글은 korean-humanizer 로 넘겨 승인받는다. Use for /dev:write, \"unslop\", \"technical writing\", \"cut AI tells\", writing or reviewing docs, readmes, PR descriptions, commit messages."
 disable-model-invocation: true
 ---
 
@@ -28,7 +28,7 @@ disable-model-invocation: true
 
 코드베이스가 낱말장이다. 심볼, 파일, 플래그, 명령은 동의어나 설명이 아니라 실제 이름으로 쓴다.
 
-전문용어를 지어내지 않는다. 개발자가 소리 내어 말하는 낱말을 쓴다. 「옮긴다」, 「지운다」, 「줄기만 하는 예산」이지 「소개(疏開)한다」, 「래칫」, 「엔드게임」이 아니다. 이름 붙은 패턴은 처음 나올 때 뜻을 말하면 써도 된다. 새로 걸리는 낱말을 찾으면 아래 18번 목록에 더하자고 답장에 diff 로 제안한다. 이 스킬을 직접 고치지 않는다. 반영은 /devkit:reflect 로 한다.
+전문용어를 지어내지 않는다. 개발자가 소리 내어 말하는 낱말을 쓴다. 「옮긴다」, 「지운다」, 「줄기만 하는 예산」이지 「소개(疏開)한다」, 「래칫」, 「엔드게임」이 아니다. 이름 붙은 패턴은 처음 나올 때 뜻을 말하면 써도 된다. 새로 걸리는 낱말을 찾으면 아래 18번 목록에 더하자고 답장에 diff 로 제안한다. 이 스킬을 직접 고치지 않는다. 반영은 /dev:reflect 로 한다.
 
 ## AI 티 패턴
 

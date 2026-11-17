@@ -14,7 +14,7 @@
 
 ```text
 매 실행 {{PACK_PATH}}/triage/SKILL.md 를 읽고 따른다.
-그 파일 안의 /devkit:<이름> 은 같은 폴더 위 {{PACK_PATH}}/<이름>/SKILL.md 를 직접 읽으라는 뜻이다.
+그 파일 안의 /dev:<이름> 은 같은 폴더 위 {{PACK_PATH}}/<이름>/SKILL.md 를 직접 읽으라는 뜻이다.
 
 설정: {{CONFIG_PATH_OR_PARAPHRASED_VALUES}}
 
@@ -44,7 +44,7 @@ Slack 에 올리는 것은 이 세션 하나뿐이다. 위임한 워커는 읽�
 
 ```text
 매 실행 {{PACK_PATH}}/repro-fix/SKILL.md 를 읽고 따른다.
-그 파일 안의 /devkit:<이름> 은 같은 폴더 위 {{PACK_PATH}}/<이름>/SKILL.md 를 직접 읽으라는 뜻이다.
+그 파일 안의 /dev:<이름> 은 같은 폴더 위 {{PACK_PATH}}/<이름>/SKILL.md 를 직접 읽으라는 뜻이다.
 
 설정: {{CONFIG_PATH_OR_PARAPHRASED_VALUES}}
 

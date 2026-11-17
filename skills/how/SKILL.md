@@ -1,6 +1,6 @@
 ---
 name: how
-description: "코드가 어떻게 동작하는지, 무엇을 어디에 둬야 하는지 설명한다. Use for \"how does X work\", code walkthroughs before changing something, placement / ownership / layering questions (\"where should this live\", \"which package owns this\", \"is this the right layer\"), subsystem architecture, runtime flow, onboarding mental models. 동기·이유는 /devkit:why. /devkit:how"
+description: "코드가 어떻게 동작하는지, 무엇을 어디에 둬야 하는지 설명한다. Use for \"how does X work\", code walkthroughs before changing something, placement / ownership / layering questions (\"where should this live\", \"which package owns this\", \"is this the right layer\"), subsystem architecture, runtime flow, onboarding mental models. 동기·이유는 /dev:why. /dev:how"
 disable-model-invocation: true
 ---
 

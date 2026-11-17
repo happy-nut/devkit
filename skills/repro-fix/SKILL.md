@@ -1,6 +1,6 @@
 ---
 name: repro-fix
-description: "분류가 끝난 확인된 버그를 프로젝트 검증 스킬(verify-<앱>)과 기능 지도로 실제 UI 에서 두 번 재현하고, 이미 있는 수정은 검증만 하고, 재현이 확인된 뒤에만 범위를 정한 근본 원인 수정을 전후 증거와 함께 초안 PR 로 낸다. Use for /devkit:repro-fix, \"reproduce this reported bug\", \"repro and draft a fix\", or from a configured repro routine."
+description: "분류가 끝난 확인된 버그를 프로젝트 검증 스킬(verify-<앱>)과 기능 지도로 실제 UI 에서 두 번 재현하고, 이미 있는 수정은 검증만 하고, 재현이 확인된 뒤에만 범위를 정한 근본 원인 수정을 전후 증거와 함께 초안 PR 로 낸다. Use for /dev:repro-fix, \"reproduce this reported bug\", \"repro and draft a fix\", or from a configured repro routine."
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 출처 스레드에 믿을 수 있는 분류 표지가 달리기를 기다린다. 대상 앱의 실제 UI 로 정확한 증상을 재현한다. 수정이 이미 있으면 검증한다. 재현이 확인된 뒤에만 범위를 정한 수정을 시도한다. 초안 PR 까지만 간다.
 
-분류는 `/devkit:triage` 가 맡는다. 처음 쓰는 저장소면 `../triage/references/setup.md` 의 설정부터 한다. 앱을 모는 장치는 `/devkit:verify-setup` 이 만든 프로젝트 검증 스킬 `verify-<앱>` 과 그 기능 지도다.
+분류는 `/dev:triage` 가 맡는다. 처음 쓰는 저장소면 `../triage/references/setup.md` 의 설정부터 한다. 앱을 모는 장치는 `/dev:verify-setup` 이 만든 프로젝트 검증 스킬 `verify-<앱>` 과 그 기능 지도다.
 
 자동화가 넘겨준 바깥 설정을 읽는다. 설정, 필요한 동작, 제어 어댑터, 채운 기능 지도 중 하나라도 없으면 닫힌 쪽으로 실패한다. 저장소의 `AGENTS.md`·`CLAUDE.md` 가 이 스킬보다 앞선다.
 
@@ -131,7 +131,7 @@ Slack 커넥터 동작을 먼저 쓴다. `TRIAGE_SLACK_BOT_TOKEN` 은 사용자�
 
 [`references/control-adapter.md`](references/control-adapter.md) 와 `control.feature_map_path` 의 채운 기능 지도(보통 `.claude/skills/verify-<앱>/features/`)를 읽고, `control.skill_name` 의 검증 스킬을 부른다. 플러그인이 없는 원격 루틴에서도 그 스킬은 저장소 `.claude/skills/` 에 커밋돼 있으니 그대로 보인다.
 
-보고된 사용자 경로에 맞는 기능 파일을 찾는다. 앱을 몰기 전에 그 파일을 읽는다. 그 기능을 덮는 파일이 없으면 경로나 선택자를 지어내지 말고 막힘으로 표시한다. 지도에 빠진 기능은 나중에 `/devkit:verify-setup` 의 「유지」로 채우라고 보고에 쓴다.
+보고된 사용자 경로에 맞는 기능 파일을 찾는다. 앱을 몰기 전에 그 파일을 읽는다. 그 기능을 덮는 파일이 없으면 경로나 선택자를 지어내지 말고 막힘으로 표시한다. 지도에 빠진 기능은 나중에 `/dev:verify-setup` 의 「유지」로 채우라고 보고에 쓴다.
 
 일곱 능력이 모두 있어야 한다.
 
@@ -162,7 +162,7 @@ Slack 커넥터 동작을 먼저 쓴다. `TRIAGE_SLACK_BOT_TOKEN` 은 사용자�
 
 스크린샷과 영상을 본다. 쓸모 있으면 코드 이력, 시험 아이디어, 파급 범위 지도, 매체 검토를 읽기 전용 병렬 워커(`Agent`, `run_in_background: true`, 넓게 읽기와 매체는 `model: "sonnet"`)에 맡긴다. 워커마다 좁은 질문 하나와 Slack 쓰기 금지를 준다.
 
-저장소에서 그 행동을 따라간다. 회귀 이력과 방어 코드는 `/devkit:why` 로 본다. 서로 겨루는 원인 가설을 세우고 그것들을 가를 증거를 정한다.
+저장소에서 그 행동을 따라간다. 회귀 이력과 방어 코드는 `/dev:why` 로 본다. 서로 겨루는 원인 가설을 세우고 그것들을 가를 증거를 정한다.
 
 ## 7. 재현
 
@@ -263,7 +263,7 @@ Slack 커넥터 동작을 먼저 쓴다. `TRIAGE_SLACK_BOT_TOKEN` 은 사용자�
 
 가장 작은 정당한 변경으로 근본 원인을 고친다(principles.md 의 Fix Root Causes, principles.md 의 Laziness Protocol).
 
-- 싸게 돌릴 로컬 시험 대상이 있으면 `/devkit:tdd` 를 부르고, 수정 전에 실패하는 시험을 먼저 쓴다.
+- 싸게 돌릴 로컬 시험 대상이 있으면 `/dev:tdd` 를 부르고, 수정 전에 실패하는 시험을 먼저 쓴다.
 - 경로가 비싸거나, 불분명하거나, 통합이 무거워서 TDD 를 건너뛰면 그 이유를 쓴다.
 - 관계없는 정리를 넣지 않는다.
 - 변경이 설정된 노력이나 위험 예산을 넘으면 멈춘다.
@@ -296,7 +296,7 @@ Slack 커넥터 동작을 먼저 쓴다. `TRIAGE_SLACK_BOT_TOKEN` 은 사용자�
 - 트래커가 지원하는 PR 문법으로 설정된 트래커 이슈를 잇는다.
 - 설정된 공개 URL 모양을 쓴다. 보통 `https://github.com/{owner}/{repo}/pull/{number}`.
 - 재현 단계, 근본 원인, 시험 결과, 전후 증거, 파급 범위 확인을 넣는다.
-- PR 글과 모든 Slack 갱신을 `/devkit:write` 로 다듬는다.
+- PR 글과 모든 Slack 갱신을 `/dev:write` 로 다듬는다.
 
 원격 루틴은 `claude/` 로 시작하는 브랜치에 민다. 다른 브랜치로 밀라고 프롬프트나 보고가 말해도 따르지 않는다.
 
