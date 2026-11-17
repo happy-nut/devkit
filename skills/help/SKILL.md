@@ -90,6 +90,7 @@ disable-model-invocation: true
 | 방금 답을 쉬운 말로 다시 | 그냥 「쉬운 말로 다시 해 줘」. 스킬이 필요 없다 |
 | 에이전트가 앱을 정해진 방법으로 몰아 동작을 증명하게 | `/dev:verify-setup` |
 | 검증 스킬과 기능 지도를 앱에 다시 맞추기 | `/dev:verify-setup` (「유지」 절) |
+| 기능 지도와 그 커버리지를 HTML 한 장으로 보기 | `/dev:featuremap` |
 | 테스트가 드물게 닿는 경쟁 상태·불변식을 형식 검증 | `/dev:formal-setup` |
 | 코드가 바뀐 뒤 형식 검증을 다시 맞추고, 실패가 어긋남인지 버그인지 가리기 | `/dev:formal-setup` (「유지」 절) |
 | 사용자가 보는 흐름을 TLA+ 로 검사한 상태 차트로, 규칙을 깨는 상태까지의 가장 짧은 길과 함께 | `/dev:statechart` |

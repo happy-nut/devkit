@@ -137,7 +137,7 @@ def check_version_bumps_last_digit_by_one():
 
 
 def run_self_tests():
-    for cmd in (['scripts/test_hooks.py'], ['skills/no-comments/scripts/count.py', '--self-test']):
+    for cmd in (['scripts/test_hooks.py'], ['skills/no-comments/scripts/count.py', '--self-test'], ['skills/featuremap/scripts/featuremap.py', '--self-test']):
         r = subprocess.run([sys.executable, '-I', *cmd], capture_output=True, text=True)
         if r.returncode:
             sys.exit(r.stdout + r.stderr)

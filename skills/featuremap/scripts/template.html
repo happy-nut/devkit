@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__ 기능 지도</title>
+<style>
+:root{--bg:#f7f7f5;--panel:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e4e3de;--accent:#3b5bdb;--auto:#2f9e44;--method:#e8a317;--none:#d9480f;--chip:#f0efea;--code:#f3f2ee}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--panel:#1d1d1b;--ink:#ecebe6;--muted:#9a9993;--line:#2e2e2b;--accent:#7c95ff;--auto:#51cf66;--method:#fcc419;--none:#ff8a5c;--chip:#272724;--code:#262623}.st{color:#141413!important}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Segoe UI",sans-serif}
+header{padding:20px 16px 8px;max-width:1200px;margin:0 auto}
+h1{font-size:22px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;max-width:1200px;margin:12px auto;padding:0 16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--muted);font-size:12.5px}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--chip);margin-top:8px}
+.bar i{display:block;height:100%}
+.auto{background:var(--auto)}.method{background:var(--method)}.none{background:var(--none)}
+nav{display:flex;gap:6px;max-width:1200px;margin:8px auto 0;padding:0 16px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);font:inherit;padding:10px 6px;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--ink);border-color:var(--accent);font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+input[type=search]{flex:1 1 220px;min-width:0;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.split{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+@media (max-width:760px){.split{grid-template-columns:1fr}}
+.list{display:flex;flex-direction:column;gap:6px;position:sticky;top:8px}
+@media (max-width:760px){.list{position:static}}
+.feat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.feat.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.feat small{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.card h2{margin:0 0 6px;font-size:18px}
+.card h3{margin:0 0 8px;font-size:15px}
+.subs{width:100%;border-collapse:collapse}
+.subs td{border-top:1px solid var(--line);padding:9px 6px;vertical-align:top}
+.subs tr:first-child td{border-top:0}
+.st{font-size:12px;border-radius:6px;padding:2px 7px;white-space:nowrap;color:#fff}
+.st.method{color:#1d1d1b}
+.proof{font-size:12.5px;color:var(--muted);margin-top:4px;word-break:break-all}
+.proof code{font-size:12px}
+details{border-top:1px solid var(--line);padding:10px 0}
+details:first-of-type{border-top:0}
+summary{cursor:pointer;font-weight:600}
+code{background:var(--code);border-radius:4px;padding:1px 4px;font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--code);border-radius:8px;padding:10px;overflow-x:auto}
+pre code{background:none;padding:0}
+.row{display:flex;gap:12px;border-top:1px solid var(--line);padding:4px 0}.row span{flex:1}
+a{color:var(--accent)}
+.surf{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.s{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--auto);border-radius:10px;padding:9px 11px}
+.s.miss{border-left-color:var(--none)}
+.s b{font-size:14px}.s div{font-size:12.5px;color:var(--muted)}
+.group{margin:16px 0 8px;font-size:13px;color:var(--muted);font-weight:600}
+.empty{color:var(--muted);padding:20px 0}
+</style>
+</head>
+<body>
+<header><h1 id="t"></h1><div class="sub" id="meta"></div></header>
+<section class="kpis" id="kpis"></section>
+<nav id="tabs"></nav>
+<main id="view"></main>
+<script>
+const D = __DATA__;
+const LABEL = {auto: "자동 검증", method: "방법만", none: "없음"};
+const HELP = {auto: "실행 파일이나 실행 명령 줄이 이 ID 를 가리킨다", method: "Driving 절에 이 ID 의 손 검증 방법이 있다", none: "어디에도 검증 방법이 없다"};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct = (a, b) => b ? Math.round(a * 100 / b) : 0;
+const S = D.summary;
+const state = {tab: "features", feat: D.features[0]?.key, status: new Set(["auto", "method", "none"]), q: "", onlyMiss: false};
+const bar = (c) => { const t = c.auto + c.method + c.none || 1; return `<div class="bar">${["auto","method","none"].map(k => `<i class="${k}" style="width:${c[k]*100/t}%"></i>`).join("")}</div>`; };
+const counts = subs => ({auto: subs.filter(s => s.status === "auto").length, method: subs.filter(s => s.status === "method").length, none: subs.filter(s => s.status === "none").length});
+
+document.getElementById("t").textContent = `${D.title}`;
+document.getElementById("meta").textContent = `${D.repo} · ${D.generated} 생성 · 기능 ${S.features}개 · 하위 기능 ${S.subs}개`;
+document.getElementById("kpis").innerHTML = [
+  [`${pct(S.auto, S.subs)}%`, `자동 검증 ${S.auto}/${S.subs}`, bar(S)],
+  [`${pct(S.auto + S.method, S.subs)}%`, `검증 방법이 있는 하위 기능 ${S.auto + S.method}/${S.subs}`, ""],
+  [S.surfaces ? `${pct(S.mapped, S.surfaces)}%` : "–", S.surfaces ? `지도에 든 진입점 ${S.mapped}/${S.surfaces}` : "진입점 목록 없음", ""],
+  [S.gaps, "지도가 스스로 밝힌 빈칸", ""],
+].map(([b, s, x]) => `<div class="kpi"><b>${b}</b><span>${s}</span>${x}</div>`).join("");
+
+const TABS = [["features", "기능"], ["surfaces", `진입점 ${S.surfaces ? S.mapped + "/" + S.surfaces : ""}`], ["gaps", `지도에 없음 ${S.gaps}`]];
+function tabs() {
+  document.getElementById("tabs").innerHTML = TABS.map(([k, l]) => `<button class="${state.tab === k ? "on" : ""}" data-tab="${k}">${l}</button>`).join("");
+}
+document.getElementById("tabs").onclick = e => { const k = e.target.dataset.tab; if (k) { state.tab = k; render(); } };
+
+function matches(s) {
+  if (!state.status.has(s.status)) return false;
+  const q = state.q.trim().toLowerCase();
+  return !q || (s.id + " " + s.html).toLowerCase().includes(q);
+}
+
+function featuresView() {
+  const chips = ["auto", "method", "none"].map(k => `<button class="chip ${state.status.has(k) ? "on" : ""}" data-st="${k}" title="${HELP[k]}"><span class="dot ${k}"></span>${LABEL[k]} ${S[k]}</button>`).join("");
+  const visible = D.features.filter(f => f.subs.some(matches) || (!state.q && f.subs.length === 0));
+  if (!visible.find(f => f.key === state.feat)) state.feat = visible[0]?.key;
+  const list = visible.map(f => { const c = counts(f.subs); return `<button class="feat ${f.key === state.feat ? "on" : ""}" data-f="${esc(f.key)}"><div>${esc(f.title)}</div><small>하위 기능 ${f.subs.length} · 자동 ${c.auto} · 방법만 ${c.method} · 없음 ${c.none}</small>${bar(c)}</button>`; }).join("");
+  const f = D.features.find(x => x.key === state.feat);
+  let detail = `<div class="empty">조건에 맞는 하위 기능이 없다.</div>`;
+  if (f) {
+    const rows = f.subs.filter(matches).map(s => `<tr><td><span class="st ${s.status}" style="background:var(--${s.status})" title="${HELP[s.status]}">${LABEL[s.status]}</span></td><td>${s.html}${s.proofs.length ? `<div class="proof">${s.proofs.map(p => `<div><code>${esc(p.path)}:${p.line}</code> ${esc(p.text)}</div>`).join("")}</div>` : ""}</td></tr>`).join("");
+    detail = `<div class="card"><h2>${esc(f.title)}</h2><div class="sub"><code>${esc(f.file)}</code></div>${f.purpose}${bar(counts(f.subs))}</div>
+      <div class="card"><h3>하위 기능</h3>${rows ? `<table class="subs">${rows}</table>` : `<div class="empty">조건에 맞는 하위 기능이 없다.</div>`}</div>
+      <div class="card">${f.sections.filter(x => !/^(sub-features|하위 기능)/i.test(x.name)).map((x, i) => `<details ${i === 0 ? "open" : ""}><summary>${esc(x.name)}</summary>${x.html}</details>`).join("")}</div>`;
+  }
+  return `<div class="tools"><input type="search" id="q" placeholder="하위 기능 ID·설명 찾기" value="${esc(state.q)}">${chips}</div><div class="split"><div class="list">${list || '<div class="empty">없음</div>'}</div><div>${detail}</div></div>`;
+}
+
+function surfacesView() {
+  if (!D.surfaces.length) return `<div class="empty">진입점 목록(--surfaces)을 주지 않아 지도 커버리지를 재지 않았다.</div>`;
+  const q = state.q.trim().toLowerCase();
+  const shown = D.surfaces.filter(s => (!state.onlyMiss || !s.mapped_in.length) && (!q || JSON.stringify(s).toLowerCase().includes(q)));
+  const groups = {};
+  shown.forEach(s => (groups[s.group || "기타"] ??= []).push(s));
+  const name = k => D.features.find(f => f.key === k)?.title || k;
+  const all = g => D.surfaces.filter(s => (s.group || "기타") === g);
+  const body = Object.entries(groups).map(([g, items]) => `<div class="group">${esc(g)} · 지도에 듦 ${all(g).filter(s => s.mapped_in.length).length}/${all(g).length}</div><div class="surf">${items.map(s => `<div class="s ${s.mapped_in.length ? "" : "miss"}"><b>${esc(s.label || s.id)}</b><div>${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")}</div><div>${s.mapped_in.length ? "지도: " + s.mapped_in.map(k => `<a href="#" data-go="${esc(k)}">${esc(name(k))}</a>`).join(", ") : "지도에 없음"}${s.where ? ` · <code>${esc(s.where)}</code>` : ""}</div></div>`).join("")}</div>`).join("");
+  return `<div class="tools"><input type="search" id="q" placeholder="진입점 찾기" value="${esc(state.q)}"><button class="chip ${state.onlyMiss ? "on" : ""}" id="miss"><span class="dot none"></span>지도에 없는 것만 ${S.surfaces - S.mapped}</button></div>${body || '<div class="empty">조건에 맞는 진입점이 없다.</div>'}`;
+}
+
+function gapsView() {
+  return D.gaps.length ? `<div class="card"><h3>지도가 스스로 밝힌 빈칸</h3><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul></div>` : `<div class="empty">README 에 「Not mapped yet」 절이 없다.</div>`;
+}
+
+function render() {
+  tabs();
+  const v = document.getElementById("view");
+  v.innerHTML = state.tab === "features" ? featuresView() : state.tab === "surfaces" ? surfacesView() : gapsView();
+  const q = document.getElementById("q");
+  if (q) q.oninput = e => { state.q = e.target.value; const pos = e.target.selectionStart; render(); const n = document.getElementById("q"); n.focus(); n.setSelectionRange(pos, pos); };
+}
+document.getElementById("view").addEventListener("click", e => {
+  const t = e.target.closest("[data-f],[data-st],[data-go],#miss");
+  if (!t) return;
+  if (t.dataset.f) state.feat = t.dataset.f;
+  if (t.dataset.st) state.status.has(t.dataset.st) ? state.status.delete(t.dataset.st) : state.status.add(t.dataset.st);
+  if (t.dataset.go) { e.preventDefault(); state.tab = "features"; state.feat = t.dataset.go; state.q = ""; state.status = new Set(["auto", "method", "none"]); }
+  if (t.id === "miss") state.onlyMiss = !state.onlyMiss;
+  render();
+  if (t.dataset.f && innerWidth <= 760) document.querySelector(".split > div:last-child").scrollIntoView({behavior: "smooth"});
+});
+render();
+</script>
+</body>
+</html>
