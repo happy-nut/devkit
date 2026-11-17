@@ -1,4 +1,4 @@
-# 분류(/devkit:triage)와 재현·수정(/devkit:repro-fix) 설정 예시.
+# 분류(/dev:triage)와 재현·수정(/dev:repro-fix) 설정 예시.
 # 이 파일을 고치지 말고 팩 밖(예: .claude/triage/configuration.yaml)에 복사해 채운다.
 # 비밀 값은 넣지 않는다. 토큰은 클라우드 환경의 네트워크 비밀이나 셸 환경에 둔다.
 schema_version: 1
@@ -56,7 +56,7 @@ routing:
   allow_confirmed_regression_author_ping: false
 
 control:
-  # /devkit:verify-setup 이 만든 프로젝트 검증 스킬
+  # /dev:verify-setup 이 만든 프로젝트 검증 스킬
   skill_name: "verify-example-app"
   feature_map_path: ".claude/skills/verify-example-app/features/"
   environment: "safe-test-environment-placeholder"

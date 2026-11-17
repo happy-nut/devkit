@@ -7,7 +7,7 @@
 ## 단계
 
 1. 스냅샷을 찍고 감사한다.
-   `df -h /` 를 기록하고 `../scripts/worktree-audit.sh [-b <pr-base-ref>] [repo-path]` 를 돌린다(principles.md 의 Build the Lever). `-b` 가 없으면 `MERGED` 를 `origin/HEAD` 에 대어 보니, PR 이 다른 브랜치를 겨누면 `-b origin/<branch>` 를 준다. 스크립트는 경로를 손으로 치지 않고 `git worktree list` 에서 읽는다. 손으로 친 `myrepo-worktrees/x` 는 `.claude/worktrees/x` 에 사는 것을 놓친다(principles.md 의 Encode Lessons in Structure). 워크트리마다 크기, 나이, 머지 여부, 커밋 안 한 작업, PR 상태, 그것을 다룬 가장 최근 Claude Code 세션을 모아 분류를 제안한다. 세션 기록 훑기가 느리니(저장소 하나에 몇 분) Bash `run_in_background: true` 로 돌린다.
+   `df -h /` 를 기록하고 `../scripts/worktree-audit.sh [-b <pr-base-ref>] [repo-path]` 를 돌린다(principles.md 의 Build the Lever). `-b` 가 없으면 `IN_BASE` 를 `origin/HEAD` 에 대어 보니, PR 이 다른 브랜치를 겨누면 `-b origin/<branch>` 를 준다. 스크립트는 경로를 손으로 치지 않고 `git worktree list` 에서 읽는다. 손으로 친 `myrepo-worktrees/x` 는 `.claude/worktrees/x` 에 사는 것을 놓친다(principles.md 의 Encode Lessons in Structure). 워크트리마다 크기, 나이, 머지 여부, 커밋 안 한 작업, PR 상태, 그것을 다룬 가장 최근 Claude Code 세션을 모아 분류를 제안한다. 세션 기록 훑기가 느리니(저장소 하나에 몇 분) Bash `run_in_background: true` 로 돌린다.
 2. 분류는 조언이지 허락이 아니다.
    고정된 세션과 진행 중인 세션이 진짜 산출물이다(principles.md 의 Prove It Works). 그 목록을 세션 목록(데스크톱 앱이면 세션 목록 도구)이나 사용자에게서 받아 후보마다 대어 본다. 스크립트가 사용자가 고정해 둔 워크트리를 `safe` 로 찍은 적이 있다. 고정 목록이 이긴다.
 3. 지우기 전에 쓰임을 확인한다.
