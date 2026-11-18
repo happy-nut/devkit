@@ -1,7 +1,16 @@
 {
   "name": "dev",
-  "version": "0.6.26",
+  "version": "0.6.27",
   "description": "에이전트를 믿을 수 있게 만드는 작업 방식 플러그인. 교정은 장치로, 끝은 증거로.",
+  "author": {
+    "name": "happy-nut",
+    "url": "https://github.com/happy-nut"
+  },
   "repository": "https://github.com/happy-nut/kit",
-  "keywords": ["workflow", "agents", "verification", "hooks"]
+  "keywords": [
+    "workflow",
+    "agents",
+    "verification",
+    "hooks"
+  ]
 }

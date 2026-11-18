@@ -108,11 +108,15 @@ def check_no_private_words():
     private_words = private_words_from_user_config()
     origin = subprocess.run(['git', 'remote', 'get-url', 'origin'], capture_output=True, text=True).stdout.strip()
     slug = re.sub(r'^.*github\.com[:/]|\.git$', '', origin)
+    publisher = slug.split('/')[0] if slug else ''
     tracked = subprocess.run(['git', 'ls-files', '-co', '--exclude-standard'], capture_output=True, text=True).stdout.splitlines()
     for path in tracked:
         if os.path.isfile(path):
+            allowed = [slug, publisher] if path.startswith('.claude-plugin/') else [slug]
             for i, line in enumerate(open(path, errors='ignore').read().splitlines(), 1):
-                if private_words.search(line.replace(slug, '') if slug else line):
+                for word in filter(None, allowed):
+                    line = line.replace(word, '')
+                if private_words.search(line):
                     errors.append(f'{path}:{i}: 특정 사람·앱·개인 도구 이름: {line.strip()[:80]}')
 
 
