@@ -4,6 +4,7 @@ import argparse, datetime, html, json, os, re, subprocess, sys, tempfile
 RUNNABLE = re.compile(r"\b(node|npm|npx|pnpm|yarn|bun|deno|python3?|pytest|bash|sh|go test|cargo|swift|xcodebuild|make)\b|\./|\.(mjs|js|ts|sh|py)\b")
 GAP_HEADINGS = re.compile(r"^##\s+(Not mapped|지도에 없|아직 지도)", re.I)
 SECTION = re.compile(r"^##\s+(.+?)\s*$", re.M)
+NOT_AFTER_WORD_OR_CSS_DOT = r"(?<![\w.-])"
 SKIP = re.compile(r"(^|/)(node_modules|dist|build|vendor|\.git)/")
 HANGUL = re.compile(r"[가-힣]")
 FEATURE_ID = re.compile(r"^([A-Z][A-Z0-9_-]*)\s+[\u2014\u2013-]+\s+(.+)$")
@@ -111,7 +112,7 @@ def proofs_for(ids, files):
     found = {i: [] for i in ids}
     if not ids:
         return found
-    pat = re.compile(r"(?<![\w-])(" + "|".join(sorted(map(re.escape, ids), key=len, reverse=True)) + r")(?![\w-])")
+    pat = re.compile(NOT_AFTER_WORD_OR_CSS_DOT + r"(" + "|".join(sorted(map(re.escape, ids), key=len, reverse=True)) + r")(?![\w-])")
     for path, lines in files:
         prose = path.lower().endswith((".md", ".txt"))
         for n, line in enumerate(lines, 1):
@@ -141,7 +142,7 @@ def read_map(features_dir, repo, ignore=()):
         for b in bullets(subs_body):
             sid = token(b)
             if sid:
-                subs.append({"id": sid, "name": default_name(b, sid), "html": inline(b), "method": re.search(r"(?<![\w-])" + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
+                subs.append({"id": sid, "name": default_name(b, sid), "html": inline(b), "method": re.search(NOT_AFTER_WORD_OR_CSS_DOT + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
         title_text = h1.group(1).strip() if h1 else name[:-3]
         fid = FEATURE_ID.match(title_text)
         features.append({"key": name[:-3], "id": fid.group(1) if fid else name[:-3], "name": (fid.group(2) if fid else title_text).strip(), "file": name, "title": title_text,
@@ -230,6 +231,9 @@ def self_test():
         with open(os.path.join(feat, "README.md"), "a") as f:
             f.write("\n## Not mapped yet\n\n- 내보내기 메뉴,\n  설정 화면\n- 휴지통\n")
         open(os.path.join(t, "drive.sh"), "w").write("node drive.mjs create-open\n")
+        open(os.path.join(t, "app.js"), "w").write("click('.create-cancel')\n")
+        driven = open(os.path.join(feat, "create-note.md")).read().replace("- **초안 취소.**", "- **초안 취소.** `.create-cancel` 단추.")
+        open(os.path.join(feat, "create-note.md"), "w").write(driven)
         surf = os.path.join(t, "surfaces.json")
         json.dump([{"id": "new", "label": "새 노트", "match": ["New note"]}, {"id": "export", "label": "내보내기", "match": ["Export all"]}, {"id": "disc", "label": "앞부분만 겹침", "match": ["Disc"]}, {"id": "to", "label": "짧은 키", "match": ["to"]}], open(surf, "w"))
         names = os.path.join(t, "names.json")
@@ -245,7 +249,7 @@ def self_test():
         status = {s["id"]: s["status"] for f in data["features"] for s in f["subs"]}
         assert status["create-open"] == "auto", "실행 파일이 ID 를 가리키면 자동 검증"
         assert status["create-save"] == "method", "Driving 글머리에 ID 가 있으면 방법만"
-        assert status["create-cancel"] == "none", "어디에도 없으면 없음"
+        assert status["create-cancel"] == "none", "어디에도 없으면 없음 (`.create-cancel` 같은 CSS 클래스는 ID 가 아니다)"
         assert [s["mapped_in"] for s in data["surfaces"]] == [["create-note"], [], [], []], "진입점은 기능 파일 글에 낱말째 있어야 맞는다(Disc 는 Discard 에, 짧은 키 to 는 백틱 없는 to 에 걸리지 않는다)"
         assert data["gaps"] == ["내보내기 메뉴, 설정 화면", "휴지통"], "빈칸 글머리는 이어지는 줄까지 하나로 읽는다"
         page = render(data)
