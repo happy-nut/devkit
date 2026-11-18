@@ -163,7 +163,7 @@ with tempfile.TemporaryDirectory() as t:
         if when:
             env.update(GIT_AUTHOR_DATE=when, GIT_COMMITTER_DATE=when)
         subprocess.run(['git', '-C', repo, *args], check=True, capture_output=True, env=env)
-    def stop(entries, commit=(), dirty=(), before=(), active=False):
+    def stop(entries, commit=(), dirty=(), before=(), active=False, body='x\n'):
         repo = tempfile.mkdtemp(dir=t)
         git(repo, 'init', '-q')
         at = datetime.datetime.fromisoformat(entries[0]['timestamp'].replace('Z', '+00:00'))
@@ -175,7 +175,8 @@ with tempfile.TemporaryDirectory() as t:
                 git(repo, 'add', '-A')
                 git(repo, 'commit', '-qm', 'x', when=when.isoformat())
         for f in dirty:
-            open(os.path.join(repo, f), 'w').write('x\n')
+            os.makedirs(os.path.dirname(os.path.join(repo, f)) or repo, exist_ok=True)
+            open(os.path.join(repo, f), 'w').write(body)
         tx = os.path.join(repo, '..', os.path.basename(repo) + '.jsonl')
         open(tx, 'w').write(''.join(json.dumps(e, ensure_ascii=False) + '\n' for e in entries))
         payload = {'transcript_path': tx, 'cwd': repo, 'stop_hook_active': active}
@@ -192,6 +193,8 @@ with tempfile.TemporaryDirectory() as t:
         ('장치로 남음: 재발한 카드, 회귀 테스트', load('recurring-card-test'), {'commit': ['fill.go', 'serve.go', 'need_revive_test.go', 'blocked_test.go']}, False),
         ('장치로 남음: 문서 인용 검사 스크립트', load('citation-check'), {'commit': ['scripts/check-citations.mjs']}, False),
         ('커밋 안 한 테스트 파일도 장치', leak, {'dirty': ['release_test.go']}, False),
+        ('자체 시험을 품은 스크립트를 고침', leak, {'dirty': ['skills/featuremap/scripts/featuremap.py'], 'body': 'def self_test():\n    assert build() == 1\n'}, False),
+        ('자체 시험 없는 스크립트만 고침', leak, {'dirty': ['skills/featuremap/scripts/featuremap.py']}, True),
         ('턴 전에 있던 검사는 이번 장치가 아님', leak, {'before': ['scripts/check.py'], 'commit': ['README.md']}, True),
         ('장치화 불가 이유를 적음', leak + [said('판단이라 장치화 불가: 언제 릴리스할지는 사람이 그때 정하는 일이다.')], {}, False),
         ('교정 아닌 메시지', [dict(leak[0], message={'role': 'user', 'content': '릴리스 노트도 같이 써 줘'})] + leak[1:], {}, False),

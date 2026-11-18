@@ -1,13 +1,13 @@
-# 노트 만들기
+# Create a note
 
 사용자는 브라우저나 CLI 로 제목 있는 노트를 저장하고, 덜 쓴 초안을 취소하고, 저장된 노트를 다른 사용자 화면에서 다시 확인할 수 있다.
 
 ## Sub-features
 
-- `create-open` 은 브라우저 진입점마다 빈 편집기를 연다.
-- `create-save` 는 제목과 본문을 저장한다.
-- `create-cancel` 은 덜 쓴 브라우저 초안을 버린다.
-- `create-cli` 는 터미널에서 같은 모양의 노트를 만든다.
+- `create-open` **open editor**: 브라우저 진입점마다 빈 편집기를 연다.
+- `create-save` **save**: 제목과 본문을 저장한다.
+- `create-cancel` **discard draft**: 덜 쓴 브라우저 초안을 버린다.
+- `create-cli` **create from CLI**: 터미널에서 같은 모양의 노트를 만든다.
 
 ## How to get to it (user POV)
 

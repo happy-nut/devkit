@@ -35,6 +35,27 @@ svg.graph{display:block;margin:0 auto;user-select:none}
 .colhead{font:600 11px -apple-system,BlinkMacSystemFont,sans-serif;fill:var(--muted);letter-spacing:.06em}
 .edge{fill:none;stroke:var(--edge);transition:stroke .15s,opacity .15s}
 .edge.uv{stroke-dasharray:3 4;opacity:.55}
+.edge.clash{stroke:var(--none);stroke-width:1.6;stroke-dasharray:2 3;opacity:.85}
+.mece{border:0;border-radius:999px;padding:6px 12px;font:600 12.5px inherit;cursor:pointer;align-self:center}
+.mece.ok{background:color-mix(in srgb,var(--auto) 18%,transparent);color:var(--auto)}
+.mece.bad{background:color-mix(in srgb,var(--none) 18%,transparent);color:var(--none)}
+.mecehead{display:inline-block;font:700 18px inherit;padding:8px 14px;border-radius:12px;margin:6px 0}
+.mecehead.ok{background:color-mix(in srgb,var(--auto) 16%,transparent);color:var(--auto)}
+.mecehead.bad{background:color-mix(in srgb,var(--none) 16%,transparent);color:var(--none)}
+.mrow{font:12.5px var(--mono);padding:6px 8px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:no-preference){
+  .enter .node{animation:rise .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 18ms)}
+  .enter .edge{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .9s ease-out forwards;animation-delay:calc(160ms + var(--i,0) * 6ms)}
+  .enter .edge.uv,.enter .edge.clash{animation-name:drawdash;stroke-dasharray:3 4;stroke-dashoffset:0}
+  .edge.hot{stroke-dasharray:7 5!important;animation:flow .8s linear infinite!important}
+  .node{transition:opacity .2s,transform .2s,filter .2s}
+  .node:hover rect.box{stroke:var(--accent)}
+  .drawer{transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+}
+@keyframes rise{from{opacity:0;translate:-10px 0}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes drawdash{from{opacity:0}}
+@keyframes flow{to{stroke-dashoffset:-24}}
 .node{cursor:pointer;transition:opacity .15s}
 .node rect.box{fill:var(--solid);stroke:var(--line)}
 .node .t1{font:600 12px var(--mono);fill:var(--ink)}
@@ -125,7 +146,8 @@ const ST = {auto: "자동 검증", method: "방법만", none: "없음"};
 const WHY = {auto: "실행 파일이나 실행 명령 줄이 이 ID 를 가리킨다.", method: "Driving 절에 손으로 모는 방법만 있다. 돌릴 스크립트는 없다.", none: "검증 방법이 어디에도 없다."};
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const S = D.summary, pct = (a, b) => b ? Math.round(a * 100 / b) : 0;
-const unmapped = D.surfaces.filter(s => !s.mapped_in.length);
+const unmapped = D.surfaces.filter(s => !s.mapped_in.length && !("exclude" in s));
+const M = D.mece || [];
 const surfacesOf = key => D.surfaces.filter(s => s.mapped_in.includes(key));
 const count = subs => ({auto: subs.filter(s => s.status === "auto").length, method: subs.filter(s => s.status === "method").length, none: subs.filter(s => s.status === "none").length});
 const bar = c => { const t = (c.auto + c.method + c.none) || 1; return `<div class="bar">${["auto", "method", "none"].map(k => `<i style="width:${c[k] * 100 / t}%;background:var(--${k})"></i>`).join("")}</div>`; };
@@ -136,10 +158,11 @@ document.getElementById("meta").textContent = `${D.repo} · ${D.generated} · �
 document.getElementById("stats").innerHTML = [
   [`${pct(S.auto, S.subs)}%`, `<i style="background:var(--auto)"></i>자동 검증 ${S.auto}/${S.subs}`],
   [`${pct(S.auto + S.method, S.subs)}%`, `<i style="background:var(--method)"></i>검증 방법 있음 ${S.auto + S.method}/${S.subs}`],
-  [S.surfaces ? `${pct(S.mapped, S.surfaces)}%` : "–", S.surfaces ? `지도에 든 진입점 ${S.mapped}/${S.surfaces}` : "진입점 목록 없음"],
-].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+  [S.surfaces ? `${pct(S.mapped, S.surfaces - S.excluded)}%` : "–", S.surfaces ? `주인 있는 진입점 ${S.mapped}/${S.surfaces - S.excluded}${S.excluded ? ` · 제외 ${S.excluded}` : ""}` : "진입점 목록 없음"],
+].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("") + `<button class="mece ${M.length ? "bad" : "ok"}" data-tab="mece">${M.length ? `MECE 아님 · ${M.length}` : "MECE ✓"}</button>`;
+document.getElementById("stats").onclick = e => { if (e.target.closest("[data-tab]")) { state.tab = "mece"; render(); } };
 
-const TABS = [["graph", "그래프"], ["list", "목록"], ["surfaces", `진입점 ${S.surfaces ? S.mapped + "/" + S.surfaces : ""}`], ["gaps", `지도에 없음 ${S.gaps}`]];
+const TABS = [["graph", "그래프"], ["mece", `MECE ${M.length ? "✕ " + M.length : "✓"}`], ["list", "목록"], ["surfaces", `진입점 ${S.surfaces ? S.mapped + "/" + (S.surfaces - S.excluded) : ""}`], ["gaps", `README 빈칸 ${S.gaps}`]];
 const tabsEl = document.getElementById("tabs");
 tabsEl.onclick = e => { const k = e.target.dataset.tab; if (k) { state.tab = k; render(); } };
 
@@ -183,20 +206,23 @@ function layout() {
 
 function graphView() {
   const {pos, W, H, GW, FW, narrow, sx} = layout();
-  if (state.zoom === null) state.zoom = Math.min(1, (innerWidth - 8) / W);
+  if (state.zoom === null) state.zoom = innerWidth > 0 ? Math.max(0.4, Math.min(1, (innerWidth - 8) / W)) : 1;
   const link = (x1, y1, x2, y2) => { const m = (x1 + x2) / 2; return `M${x1},${y1}C${m},${y1} ${m},${y2} ${x2},${y2}`; };
   let edges = "", nodes = "";
   GROUPS.forEach(g => {
     const to = {};
     g.items.forEach(s => s.mapped_in.forEach(k => to[k] = (to[k] || 0) + 1));
-    const miss = g.items.filter(s => !s.mapped_in.length).length;
+    const miss = g.items.filter(s => !s.mapped_in.length && !("exclude" in s)).length;
     Object.entries(to).forEach(([k, n]) => { const f = D.features.find(x => x.key === k); edges += `<path class="edge ${verified.feature(f) ? "" : "uv"}" data-for="${g.id} ${esc(f.id)}" stroke-width="${1 + Math.log2(1 + n)}" d="${link(pos[g.id].x + GW, pos[g.id].y, pos[f.id].x, pos[f.id].y)}"/>`; });
+    const clash = {};
+    g.items.filter(s => s.owner_key).forEach(s => (s.claimed_in || []).filter(k => k !== s.owner_key).forEach(k => clash[k] = (clash[k] || 0) + 1));
+    Object.keys(clash).forEach(k => { const f = D.features.find(x => x.key === k); edges += `<path class="edge clash" data-for="${g.id} ${esc(f.id)}" d="${link(pos[g.id].x + GW, pos[g.id].y, pos[f.id].x, pos[f.id].y + 10)}"/>`; });
     if (miss && unmapped.length) edges += `<path class="edge uv" data-for="${g.id} __unmapped" stroke-width="${1 + Math.log2(1 + miss)}" d="${link(pos[g.id].x + GW, pos[g.id].y, pos.__unmapped.x, pos.__unmapped.y)}"/>`;
   });
   D.features.forEach(f => f.subs.forEach(s => edges += `<path class="edge ${verified.sub(s) ? "" : "uv"}" data-for="${esc(f.id)} ${esc(s.id)}" stroke-width="1.3" d="${link(pos[f.id].x + FW, pos[f.id].y, pos[s.id].x - 7, pos[s.id].y)}"/>`));
   GROUPS.forEach(g => {
     const {x, y} = pos[g.id], m = g.items.filter(s => s.mapped_in.length).length, w = GW;
-    nodes += `<g class="node grp ${verified.group(g) ? "" : "uvn"}" data-id="${g.id}" transform="translate(${x},${y - 21})"><rect class="ring" x="-4" y="-4" width="${w + 8}" height="50" rx="12" style="display:none"/><rect class="box" width="${w}" height="42" rx="9"/><text class="t2" x="10" y="17">${esc(cut(g.name, narrow ? 11 : 24))}</text><text class="t3" x="10" y="33">${narrow ? `${m}/${g.items.length}` : `진입점 ${g.items.length} · 지도에 ${m}`}</text><rect x="0" y="40" width="${w * m / g.items.length}" height="2" fill="var(--accent)"/></g>`;
+    nodes += `<g class="node grp ${verified.group(g) ? "" : "uvn"}" data-id="${g.id}" transform="translate(${x},${y - 21})"><rect class="ring" x="-4" y="-4" width="${w + 8}" height="50" rx="12" style="display:none"/><rect class="box" width="${w}" height="42" rx="9"/><text class="t2" x="10" y="17">${esc(cut(g.name, narrow ? 11 : 24))}</text><text class="t3" x="10" y="33">${narrow ? `${m}/${g.items.length}` : `진입점 ${g.items.length} · 주인 있음 ${m}`}</text><rect x="0" y="40" width="${w * m / g.items.length}" height="2" fill="var(--accent)"/></g>`;
   });
   D.features.forEach(f => {
     const {x, y} = pos[f.id], c = count(f.subs), t = Math.max(f.subs.length, 1);
@@ -206,7 +232,7 @@ function graphView() {
   });
   if (unmapped.length) {
     const {x, y} = pos.__unmapped;
-    nodes += `<g class="node feature uvn" data-id="__unmapped" transform="translate(${x},${y - 24})"><rect class="ring" x="-4" y="-4" width="${FW + 8}" height="56" rx="12" style="display:none"/><rect class="box" width="${FW}" height="48" rx="9"/><text class="t1" x="10" y="17">Unmapped</text><text class="t3" x="10" y="34">지도 밖 진입점 ${unmapped.length}</text></g>`;
+    nodes += `<g class="node feature uvn" data-id="__unmapped" transform="translate(${x},${y - 24})"><rect class="ring" x="-4" y="-4" width="${FW + 8}" height="56" rx="12" style="display:none"/><rect class="box" width="${FW}" height="48" rx="9"/><text class="t1" x="10" y="17" fill="var(--none)">Unowned</text><text class="t3" x="10" y="34">주인 없는 진입점 ${unmapped.length}</text></g>`;
   }
   D.features.forEach(f => f.subs.forEach(s => {
     const {x, y} = pos[s.id], dot = s.status === "auto" ? `<circle r="6.5" fill="var(--auto)"/>` : s.status === "method" ? `<circle r="5.5" fill="var(--solid)" stroke="var(--method)" stroke-width="2.5"/>` : `<circle r="5.5" fill="none" stroke="var(--none)" stroke-width="1.6" stroke-dasharray="2 2"/>`;
@@ -230,13 +256,13 @@ function drawerHtml(id) {
   const copy = text => `<button class="copy" data-copy="${esc(text)}">복사</button>`;
   if (n.kind === "group") {
     const g = n.g, fname = k => { const f = D.features.find(x => x.key === k); return f ? `${f.id} ${f.name}` : k; };
-    return `${close}<div class="kicker">ENTRY POINTS</div><div class="ename"><code>${esc(g.name)}</code></div><p class="desc">이 묶음의 진입점 ${g.items.length}개 가운데 ${g.items.filter(s => s.mapped_in.length).length}개가 기능 지도에 있다. ${verified.group(g) ? "" : "이 묶음이 닿는 기능에는 자동 검증이 없다."}</p>
-      <div class="box"><h4>진입점</h4>${g.items.map(s => `<div class="proof ${s.mapped_in.length ? "" : "list-uv"}"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")} → ${s.mapped_in.length ? s.mapped_in.map(k => `<a href="#" data-pick="${esc(D.features.find(f => f.key === k).id)}">${esc(fname(k))}</a>`).join(", ") : "지도에 없음"} <span style="color:var(--muted)">${esc(s.where || "")}</span></div>`).join("")}</div>`;
+    return `${close}<div class="kicker">ENTRY POINTS</div><div class="ename"><code>${esc(g.name)}</code></div><p class="desc">이 묶음의 진입점 ${g.items.length}개 가운데 ${g.items.filter(s => s.mapped_in.length).length}개에 주인 기능이 있다. ${verified.group(g) ? "" : "이 묶음이 닿는 기능에는 자동 검증이 없다."}</p>
+      <div class="box"><h4>진입점</h4>${g.items.map(s => `<div class="proof ${s.mapped_in.length ? "" : "list-uv"}"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")} → ${"exclude" in s ? `제외: ${esc(s.exclude)}` : s.mapped_in.length ? s.mapped_in.map(k => `<a href="#" data-pick="${esc(D.features.find(f => f.key === k).id)}">${esc(fname(k))}</a>`).join(", ") : '<b style="color:var(--none)">주인 없음</b>'}${(s.claimed_in || []).filter(k => k !== s.owner_key).length ? ` <b style="color:var(--none)">겹침: ${s.claimed_in.filter(k => k !== s.owner_key).map(fname).map(esc).join(", ")}</b>` : ""} <span style="color:var(--muted)">${esc(s.where || "")}</span></div>`).join("")}</div>`;
   }
   if (n.kind === "unmapped") {
-    return `${close}<div class="kicker">UNMAPPED</div><div class="ename"><code>Unmapped</code></div><p class="desc">코드에는 있는데 기능 지도에 적히지 않은 진입점 ${unmapped.length}개다. 지도에 넣으면 검증 방법을 붙일 수 있다.</p>
-      ${D.gaps.length ? `<div class="box"><h4>지도가 스스로 밝힌 빈칸</h4><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul></div>` : ""}
-      <div class="box"><h4>지도 밖 진입점</h4>${unmapped.slice(0, 200).map(s => `<div class="proof"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")} <span style="color:var(--muted)">${esc(s.where || "")}</span></div>`).join("")}</div>`;
+    return `${close}<div class="kicker">UNMAPPED</div><div class="ename"><code>Unmapped</code></div><p class="desc">주인 기능이 없는 진입점 ${unmapped.length}개다. 하나라도 있으면 지도는 MECE 가 아니다(빠짐). 그 진입점을 여는 화면·처리기를 맡은 기능 파일에 적거나, 없으면 기능 파일을 새로 만든다.</p>
+      ${D.gaps.length ? `<div class="box"><h4>README 가 적어 둔 빈칸</h4><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul></div>` : ""}
+      <div class="box"><h4>주인 없는 진입점</h4>${unmapped.slice(0, 200).map(s => `<div class="proof"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")} <span style="color:var(--muted)">${esc(s.where || "")}</span></div>`).join("")}</div>`;
   }
   if (n.kind === "feature") {
     const f = n.f, c = count(f.subs), surf = surfacesOf(f.key);
@@ -257,6 +283,14 @@ function drawerHtml(id) {
 let centerOn = () => {};
 function setupGraph() {
   const svg = document.getElementById("svg"), canvas = document.getElementById("canvas"), drawer = document.getElementById("drawer");
+  if (!state.introDone) {
+    state.introDone = true;
+    const col = el => +(el.closest(".node, .edge")?.getAttribute("transform")?.match(/\d+/)?.[0] || 0);
+    svg.querySelectorAll(".node").forEach((n, i) => n.style.setProperty("--i", Math.round(col(n) / 40) + (i % 12)));
+    svg.querySelectorAll(".edge").forEach((e, i) => { e.setAttribute("pathLength", "1"); e.style.setProperty("--i", i % 40); });
+    svg.classList.add("enter");
+    setTimeout(() => { svg.classList.remove("enter"); svg.querySelectorAll(".edge").forEach(e => e.removeAttribute("pathLength")); }, 1900);
+  }
   const zoomTo = z => { const cx = (canvas.scrollLeft + canvas.clientWidth / 2) / state.zoom, cy = (canvas.scrollTop + canvas.clientHeight / 2) / state.zoom; state.zoom = Math.min(2.5, Math.max(0.4, z)); svg.setAttribute("width", svg.dataset.w * state.zoom); svg.setAttribute("height", svg.dataset.h * state.zoom); canvas.scrollLeft = cx * state.zoom - canvas.clientWidth / 2; canvas.scrollTop = cy * state.zoom - canvas.clientHeight / 2; };
   svg.addEventListener("click", e => { const g = e.target.closest(".node"); select(g ? g.dataset.id : null); });
   svg.addEventListener("mouseover", e => { const g = e.target.closest(".node"); if (g && !state.sel) focus(g.dataset.id); });
@@ -333,18 +367,27 @@ function surfacesView() {
   D.surfaces.filter(s => (!state.onlyMiss || !s.mapped_in.length) && (!q || JSON.stringify(s).toLowerCase().includes(q))).forEach(s => (groups[s.group || "기타"] ??= []).push(s));
   const all = g => D.surfaces.filter(s => (s.group || "기타") === g);
   const fname = k => { const f = D.features.find(x => x.key === k); return f ? `${f.id} ${f.name}` : k; };
-  const body = Object.entries(groups).map(([g, items]) => `<div class="group">${esc(g)} · 지도에 듦 ${all(g).filter(s => s.mapped_in.length).length}/${all(g).length}</div><div class="surf">${items.map(s => `<div class="s ${s.mapped_in.length ? "" : "miss"}"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")}<div>${s.mapped_in.length ? s.mapped_in.map(fname).map(esc).join(", ") : "지도에 없음"}${s.where ? ` · <code>${esc(s.where)}</code>` : ""}</div></div>`).join("")}</div>`).join("");
-  return `<div class="page"><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="search" id="q" type="search" placeholder="진입점 찾기" value="${esc(state.q)}"><button class="chip ${state.onlyMiss ? "on" : ""}" id="miss"><span class="dot" style="background:var(--none)"></span>지도에 없는 것만 ${S.surfaces - S.mapped}</button></div>${body || '<div class="empty">조건에 맞는 진입점이 없다.</div>'}</div>`;
+  const body = Object.entries(groups).map(([g, items]) => `<div class="group">${esc(g)} · 주인 있음 ${all(g).filter(s => s.mapped_in.length).length}/${all(g).length}</div><div class="surf">${items.map(s => `<div class="s ${s.mapped_in.length ? "" : "miss"}"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")}<div>${s.mapped_in.length ? s.mapped_in.map(fname).map(esc).join(", ") : "주인 없음"}${s.where ? ` · <code>${esc(s.where)}</code>` : ""}</div></div>`).join("")}</div>`).join("");
+  return `<div class="page"><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="search" id="q" type="search" placeholder="진입점 찾기" value="${esc(state.q)}"><button class="chip ${state.onlyMiss ? "on" : ""}" id="miss"><span class="dot" style="background:var(--none)"></span>주인 없는 것만 ${S.surfaces - S.mapped}</button></div>${body || '<div class="empty">조건에 맞는 진입점이 없다.</div>'}</div>`;
+}
+
+function meceView() {
+  const kinds = [["겹침", "ME · 한 진입점이 둘 이상의 기능에 적힘"], ["주인", "CE · 진입점의 주인이 없거나 주인 파일에 안 적힘"], ["하위 기능 ID 겹침", "ME · 같은 하위 기능 ID 가 두 파일에"], ["제외", "제외를 잘못 씀"]];
+  const box = (title, items) => items.length ? `<div class="group">${title} · ${items.length}</div>${items.map(x => `<div class="mrow">${esc(x)}</div>`).join("")}` : "";
+  const used = new Set();
+  const body = kinds.map(([k, t]) => { const items = M.filter(x => !used.has(x) && x.includes(k)); items.forEach(x => used.add(x)); return box(t, items); }).join("");
+  return `<div class="page"><div class="mecehead ${M.length ? "bad" : "ok"}">${M.length ? `MECE 아님 · 문제 ${M.length}` : "MECE ✓"}</div>
+    <p class="why">진입점 ${S.surfaces} = 주인 있음 ${S.mapped} + 제외 ${S.excluded} + 주인 없음 ${S.unowned}. 주인 있는 진입점은 주인 기능 파일의 Sub-features·How to get 절에만 적혀야 한다. 하위 기능은 파일마다 따로라 서로 겹치지 않는다.</p>${body}</div>`;
 }
 
 function gapsView() {
-  return `<div class="page">${D.gaps.length ? `<h3>지도가 스스로 밝힌 빈칸</h3><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul>` : `<div class="empty">README 에 「Not mapped yet」 절이 없다.</div>`}</div>`;
+  return `<div class="page">${D.gaps.length ? `<h3>README 가 적어 둔 빈칸</h3><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul>` : `<div class="empty">README 에 「Not mapped yet」 절이 없다.</div>`}</div>`;
 }
 
 function render() {
   tabsEl.innerHTML = TABS.map(([k, l]) => `<button class="${state.tab === k ? "on" : ""}" data-tab="${k}">${l}</button>`).join("");
   const v = document.getElementById("view");
-  v.innerHTML = state.tab === "graph" ? graphView() : state.tab === "list" ? listView() : state.tab === "surfaces" ? surfacesView() : gapsView();
+  v.innerHTML = state.tab === "graph" ? graphView() : state.tab === "mece" ? meceView() : state.tab === "list" ? listView() : state.tab === "surfaces" ? surfacesView() : gapsView();
   if (state.tab === "graph") setupGraph();
   const q = document.getElementById("q");
   if (q) q.oninput = e => { state.q = e.target.value; if (state.tab === "graph") { select(null); filter(); } else { const pos = e.target.selectionStart; render(); const n = document.getElementById("q"); n.focus(); n.setSelectionRange(pos, pos); } };

@@ -41,7 +41,7 @@ disable-model-invocation: true
 
 ## 3. 기능 지도를 심는다
 
-`<저장소>/.claude/skills/verify-<앱>/features/README.md` 와, 찾을 수 있는 사용자 기능마다 파일 하나를 만든다. 처음에는 라우트, 명령, 메뉴, 문서에서 위에서부터 3~5개를 목표로 한다. 모양은 [`references/feature-map-example/`](references/feature-map-example/) 을 따른다. README 색인과 기능마다 파일 하나다. 각 파일은 사용자 눈으로 답한다. 그 기능이 무엇이고, 어떻게 닿고, 장치로 어떻게 몰고, 어떤 관찰 가능한 끝 상태가 동작을 증명하나. H2 넷은 `Sub-features`, `How to get to it (user POV)`, `Driving it with <장치>`, `Gotchas` 다. 시드 데이터에 어떤 여정의 전제가 없으면 그 여정은 실패로 보고하고 이유를 그 기능의 `Gotchas` 에 적는다. 통과시키려고 여정을 약하게 만들지 않는다. 지도는 저장소가 관리하는 검증 정본이다. 지도가 여러 진입점을 적었는데 편한 하나만 몬 증명은 덜 끝난 것이다.
+`<저장소>/.claude/skills/verify-<앱>/features/README.md` 와, 찾을 수 있는 사용자 기능마다 파일 하나를 만든다. 처음에는 라우트, 명령, 메뉴, 문서에서 위에서부터 3~5개를 목표로 한다. 모양은 [`references/feature-map-example/`](references/feature-map-example/) 을 따른다. README 색인과 기능마다 파일 하나다. 각 파일은 사용자 눈으로 답한다. 그 기능이 무엇이고, 어떻게 닿고, 장치로 어떻게 몰고, 어떤 관찰 가능한 끝 상태가 동작을 증명하나. H2 넷은 `Sub-features`, `How to get to it (user POV)`, `Driving it with <장치>`, `Gotchas` 다. 시드 데이터에 어떤 여정의 전제가 없으면 그 여정은 실패로 보고하고 이유를 그 기능의 `Gotchas` 에 적는다. 통과시키려고 여정을 약하게 만들지 않는다. 기능 파일의 H1 은 `# <ID> - <영어 이름>` 이나 `# <영어 이름>`, 그 아래 첫 문장은 한국어 설명이다. `Sub-features` 글머리는 `` - `<ID>` **<영어 이름>**: <한국어 설명> `` 이다. 이 이름이 사람과 에이전트가 기능을 부르는 말이다. 지도는 MECE 다. 사용자 진입점마다 주인 기능이 하나이고, 그 진입점은 주인 파일의 `Sub-features`·`How to get to it` 에만 적는다. 다른 기능의 탭·메뉴 이름을 늘어놓는 줄을 쓰지 않는다. `/dev:featuremap` 이 이것을 검사한다. 지도는 저장소가 관리하는 검증 정본이다. 지도가 여러 진입점을 적었는데 편한 하나만 몬 증명은 덜 끝난 것이다.
 
 ## 4. 넘기기 전에 만든 스킬을 증명한다
 
