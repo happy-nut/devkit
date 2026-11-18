@@ -12,7 +12,7 @@
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#121211;--bg2:#1a1a18;--panel:#1d1d1bee;--solid:#1d1d1b;--ink:#ecebe5;--muted:#9c9b94;--faint:#5f5e59;--line:#2c2c29;
-  --edge:#3d3d39;--accent:#8c9cff;--auto:#4fd18b;--method:#f5c043;--none:#ff8662;--chip:#262624;--code:#262623;--shadow:0 1px 2px #0006,0 10px 30px #0008
+  --edge:#3d3d39;--uv:.3;--accent:#8c9cff;--auto:#4fd18b;--method:#f5c043;--none:#ff8662;--chip:#262624;--code:#262623;--shadow:0 1px 2px #0006,0 10px 30px #0008
 }}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -29,42 +29,44 @@ nav{display:flex;gap:4px;padding:0 20px;border-bottom:1px solid var(--line);over
 nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);font:inherit;font-size:13.5px;padding:9px 8px;cursor:pointer;white-space:nowrap}
 nav button.on{color:var(--ink);border-color:var(--ink);font-weight:600}
 #view{position:relative;flex:1;min-height:0;overflow:auto}
-.stage{position:relative;height:100%;min-height:420px;overflow:hidden;background:radial-gradient(circle at 50% 50%,var(--bg) 0,var(--bg2) 100%)}
-svg.graph{width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none}
-svg.graph.drag{cursor:grabbing}
-.edge{fill:none;stroke:var(--edge);stroke-width:1.2;transition:stroke .15s,opacity .15s}
-.edge.hub{stroke-width:1.6}
-.edge.ghost{stroke-dasharray:4 4}
+.stage{position:relative;height:100%;min-height:420px;overflow:hidden;background:var(--bg2)}
+.canvas{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:88px 0 70px}
+svg.graph{display:block;margin:0 auto;user-select:none}
+.colhead{font:600 11px -apple-system,BlinkMacSystemFont,sans-serif;fill:var(--muted);letter-spacing:.06em}
+.edge{fill:none;stroke:var(--edge);transition:stroke .15s,opacity .15s}
+.edge.uv{stroke-dasharray:3 4;opacity:.55}
 .node{cursor:pointer;transition:opacity .15s}
-.leaf circle{stroke:var(--solid);stroke-width:2}
+.node rect.box{fill:var(--solid);stroke:var(--line)}
+.node .t1{font:600 12px var(--mono);fill:var(--ink)}
+.node .t2{font:600 12.5px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--ink)}
+.node .t3{font:11px -apple-system,BlinkMacSystemFont,sans-serif;fill:var(--muted)}
 .leaf text{font:11.5px var(--mono);fill:var(--ink)}
 .leaf text tspan.n{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--muted)}
-.feature .disc{fill:var(--solid);stroke:var(--line);stroke-width:1}
-.feature .fid{font:600 12px var(--mono);fill:var(--ink)}
-.feature .fname{font:600 13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round}
-.feature .fsub{font:11px -apple-system,BlinkMacSystemFont,sans-serif;fill:var(--muted);paint-order:stroke;stroke:var(--bg);stroke-width:4px}
-.hubnode circle{fill:var(--ink)}
-.hubnode text{fill:var(--bg);font:600 12px -apple-system,BlinkMacSystemFont,sans-serif}
-.ghostnode .disc{fill:none;stroke:var(--none);stroke-dasharray:3 3;stroke-width:1.5}
-.dim{opacity:.13}
-.hot .edge,.edge.hot{stroke:var(--accent);stroke-width:2}
-circle.ring{stroke:var(--accent);stroke-width:2.5;fill:none}
-.toolbar{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none}
+.list-uv{opacity:.45}
+.uvn{opacity:var(--uv,.4);filter:grayscale(1)}
+.uvn rect.box{stroke-dasharray:4 3;fill:var(--bg2)}
+.uvn:hover{opacity:.75}
+.dim{opacity:.08!important}
+.edge.hot{stroke:var(--accent);stroke-width:2.2!important;opacity:1;stroke-dasharray:none}
+.node.hotn{opacity:1;filter:none}
+rect.ring,circle.ring{stroke:var(--accent);stroke-width:2.5;fill:none}
+.toolbar{position:absolute;top:10px;left:12px;right:12px;z-index:2;display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none}
 .toolbar>*{pointer-events:auto}
 .search{flex:0 1 260px;min-width:150px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(8px);color:var(--ink);font:inherit;box-shadow:var(--shadow)}
 .chip{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(8px);color:var(--ink);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;box-shadow:var(--shadow)}
 .chip.off{opacity:.45}
 .chip.on{border-color:var(--accent)}
 .dot{width:9px;height:9px;border-radius:50%;flex:none}
-.zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px}
+.zoom{position:absolute;right:12px;bottom:12px;z-index:2;display:flex;flex-direction:column;gap:6px}
 .zoom button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:16px/1 inherit;cursor:pointer;box-shadow:var(--shadow)}
-.legend{position:absolute;left:12px;bottom:12px;background:var(--panel);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:12px;color:var(--muted);box-shadow:var(--shadow);max-width:calc(100% - 80px)}
+.legend{position:absolute;left:12px;top:54px;z-index:2;display:flex;flex-wrap:wrap;gap:2px 14px;background:var(--panel);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:12px;color:var(--muted);box-shadow:var(--shadow);max-width:calc(100% - 80px)}
 .legend div{display:flex;align-items:center;gap:7px;margin:2px 0}
-.drawer{position:absolute;top:12px;right:12px;bottom:12px;width:380px;max-width:calc(100% - 24px);background:var(--panel);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:auto;padding:18px 18px 22px;transform:translateX(calc(100% + 24px));transition:transform .22s ease}
+.drawer{position:absolute;z-index:3;top:12px;right:12px;bottom:12px;width:380px;max-width:calc(100% - 24px);background:var(--panel);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:auto;padding:18px 18px 22px;transform:translateX(calc(100% + 24px));transition:transform .22s ease}
 .drawer.open{transform:none}
 @media (max-width:760px){
   .drawer{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-width:none;max-height:62%;transform:translateY(calc(100% + 16px))}
-  .legend{display:none}
+  .legend{right:12px;max-width:none;font-size:11px;padding:4px 9px;top:auto;bottom:12px;right:58px}
+  .legend div:not(.uvkey){display:none}
   header{padding:14px 16px 8px}
   .stats{margin-left:0;gap:16px;flex-wrap:nowrap}
   .stat b{font-size:17px}
@@ -127,7 +129,7 @@ const unmapped = D.surfaces.filter(s => !s.mapped_in.length);
 const surfacesOf = key => D.surfaces.filter(s => s.mapped_in.includes(key));
 const count = subs => ({auto: subs.filter(s => s.status === "auto").length, method: subs.filter(s => s.status === "method").length, none: subs.filter(s => s.status === "none").length});
 const bar = c => { const t = (c.auto + c.method + c.none) || 1; return `<div class="bar">${["auto", "method", "none"].map(k => `<i style="width:${c[k] * 100 / t}%;background:var(--${k})"></i>`).join("")}</div>`; };
-const state = {tab: "graph", sel: null, status: new Set(["auto", "method", "none"]), q: "", onlyMiss: false};
+const state = {tab: "graph", zoom: null, sel: null, status: new Set(["auto", "method", "none"]), q: "", onlyMiss: false};
 
 document.getElementById("title").textContent = D.title;
 document.getElementById("meta").textContent = `${D.repo} · ${D.generated} · 기능 ${S.features} · 하위 기능 ${S.subs}`;
@@ -151,61 +153,72 @@ function matches(s) {
   return !q || `${s.id} ${s.name} ${s.desc}`.toLowerCase().includes(q);
 }
 
+const GROUPS = [...new Set(D.surfaces.map(s => s.group || "기타"))].map((g, i) => ({id: "g:" + i, name: g, items: D.surfaces.filter(s => (s.group || "기타") === g)}));
+GROUPS.forEach(g => NODES[g.id] = {kind: "group", g});
+const verified = {sub: s => s.status === "auto", feature: f => f.subs.some(s => s.status === "auto"), group: g => g.items.some(s => s.mapped_in.some(k => verified.feature(D.features.find(f => f.key === k))))};
+const cut = (t, n) => t.length > n ? t.slice(0, n - 1) + "…" : t;
+
 function layout() {
-  const total = D.features.reduce((n, f) => n + Math.max(f.subs.length, 1), 0) + (unmapped.length ? 3 : 0);
-  const R2 = Math.max(300, total * 30 / (2 * Math.PI)), R1 = R2 * 0.48, gap = 0.6;
-  const slots = total + (D.features.length + (unmapped.length ? 1 : 0)) * gap;
-  const step = 2 * Math.PI / slots;
-  let a = -Math.PI / 2 + step * gap / 2;
+  const narrow = innerWidth <= 760, ROW = narrow ? 28 : 30, GW = narrow ? 96 : 178, FW = narrow ? 112 : 190, GAP = narrow ? 24 : 170;
+  const gx = 12, fx = gx + GW + GAP, sx = fx + FW + GAP * 0.8, W = sx + (narrow ? 118 : 330), top = 36;
   const pos = {};
-  const at = (r, t) => [r * Math.cos(t), r * Math.sin(t)];
-  D.features.forEach(f => {
-    const n = Math.max(f.subs.length, 1), start = a;
-    f.subs.forEach((s, i) => pos[s.id] = {r: R2, t: start + step * (i + 0.5)});
-    pos[f.id] = {r: R1, t: start + step * n / 2};
-    a += step * (n + gap);
+  let y = top;
+  const cols = [...D.features.map(f => ({id: f.id, n: Math.max(f.subs.length, 1), subs: f.subs}))];
+  if (unmapped.length) cols.push({id: "__unmapped", n: 2, subs: []});
+  cols.forEach(c => {
+    c.subs.forEach((s, i) => pos[s.id] = {x: sx, y: y + ROW * (i + 0.5)});
+    pos[c.id] = {x: fx, y: y + ROW * c.n / 2};
+    y += ROW * (c.n + 0.7);
   });
-  if (unmapped.length) pos.__unmapped = {r: R1, t: a + step * 1.5};
-  return {pos, at, R1, R2};
+  const want = g => { const ids = g.items.flatMap(s => s.mapped_in.map(k => D.features.find(f => f.key === k).id)); const use = ids.length ? ids : unmapped.length ? ["__unmapped"] : []; return use.length ? use.reduce((a, id) => a + pos[id].y, 0) / use.length : top; };
+  const order = GROUPS.map(g => [g, want(g)]).sort((a, b) => a[1] - b[1]);
+  const ys = [];
+  order.forEach(([, w], i) => ys.push(Math.max(i ? ys[i - 1] + 54 : top + 21, w)));
+  const mean = a => a.reduce((x, v) => x + v, 0) / (a.length || 1);
+  const shift = Math.max(mean(order.map(o => o[1])) - mean(ys), top + 21 - (ys[0] ?? 0));
+  order.forEach(([g], i) => pos[g.id] = {x: gx, y: ys[i] + shift});
+  const H = Math.max(y, (ys.at(-1) ?? 0) + shift + 30) + 20;
+  return {pos, W, H, GW, FW, narrow, sx};
 }
 
 function graphView() {
-  const {pos, at, R1, R2} = layout();
-  const P = id => at(pos[id].r, pos[id].t);
-  const curve = (a, b) => { const [x1, y1] = P(a), [x2, y2] = P(b), rm = (pos[a].r + pos[b].r) / 2, [cx1, cy1] = at(rm, pos[a].t), [cx2, cy2] = at(rm, pos[b].t); return `M${x1},${y1}C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`; };
-  const hubCurve = id => { const [x, y] = P(id), [cx, cy] = at(pos[id].r * 0.5, pos[id].t); return `M0,0Q${cx},${cy} ${x},${y}`; };
-  const arc = (r, a0, a1) => { const [x0, y0] = at(r, a0), [x1, y1] = at(r, a1); return `M${x0},${y0}A${r},${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1},${y1}`; };
+  const {pos, W, H, GW, FW, narrow, sx} = layout();
+  if (state.zoom === null) state.zoom = Math.min(1, (innerWidth - 8) / W);
+  const link = (x1, y1, x2, y2) => { const m = (x1 + x2) / 2; return `M${x1},${y1}C${m},${y1} ${m},${y2} ${x2},${y2}`; };
   let edges = "", nodes = "";
-  D.features.forEach(f => {
-    edges += `<path class="edge hub" data-for="${esc(f.id)}" d="${hubCurve(f.id)}"/>`;
-    f.subs.forEach(s => edges += `<path class="edge" data-for="${esc(s.id)} ${esc(f.id)}" d="${curve(f.id, s.id)}"/>`);
+  GROUPS.forEach(g => {
+    const to = {};
+    g.items.forEach(s => s.mapped_in.forEach(k => to[k] = (to[k] || 0) + 1));
+    const miss = g.items.filter(s => !s.mapped_in.length).length;
+    Object.entries(to).forEach(([k, n]) => { const f = D.features.find(x => x.key === k); edges += `<path class="edge ${verified.feature(f) ? "" : "uv"}" data-for="${g.id} ${esc(f.id)}" stroke-width="${1 + Math.log2(1 + n)}" d="${link(pos[g.id].x + GW, pos[g.id].y, pos[f.id].x, pos[f.id].y)}"/>`; });
+    if (miss && unmapped.length) edges += `<path class="edge uv" data-for="${g.id} __unmapped" stroke-width="${1 + Math.log2(1 + miss)}" d="${link(pos[g.id].x + GW, pos[g.id].y, pos.__unmapped.x, pos.__unmapped.y)}"/>`;
   });
-  if (unmapped.length) edges += `<path class="edge hub ghost" data-for="__unmapped" d="${hubCurve("__unmapped")}"/>`;
-  D.features.forEach(f => f.subs.forEach(s => {
-    const {t} = pos[s.id], [x, y] = P(s.id), deg = t * 180 / Math.PI, flip = Math.cos(t) < 0;
-    const label = `<text transform="rotate(${flip ? deg + 180 : deg})" x="${flip ? -13 : 13}" dy=".35em" text-anchor="${flip ? "end" : "start"}">${esc(s.id)} <tspan class="n">${esc(s.name)}</tspan></text>`;
-    nodes += `<g class="node leaf" data-id="${esc(s.id)}" data-f="${esc(f.id)}" transform="translate(${x},${y})"><circle class="ring" r="11" style="display:none"/><circle r="6.5" fill="var(--${s.status})"/>${label}</g>`;
-  }));
+  D.features.forEach(f => f.subs.forEach(s => edges += `<path class="edge ${verified.sub(s) ? "" : "uv"}" data-for="${esc(f.id)} ${esc(s.id)}" stroke-width="1.3" d="${link(pos[f.id].x + FW, pos[f.id].y, pos[s.id].x - 7, pos[s.id].y)}"/>`));
+  GROUPS.forEach(g => {
+    const {x, y} = pos[g.id], m = g.items.filter(s => s.mapped_in.length).length, w = GW;
+    nodes += `<g class="node grp ${verified.group(g) ? "" : "uvn"}" data-id="${g.id}" transform="translate(${x},${y - 21})"><rect class="ring" x="-4" y="-4" width="${w + 8}" height="50" rx="12" style="display:none"/><rect class="box" width="${w}" height="42" rx="9"/><text class="t2" x="10" y="17">${esc(cut(g.name, narrow ? 11 : 24))}</text><text class="t3" x="10" y="33">${narrow ? `${m}/${g.items.length}` : `진입점 ${g.items.length} · 지도에 ${m}`}</text><rect x="0" y="40" width="${w * m / g.items.length}" height="2" fill="var(--accent)"/></g>`;
+  });
   D.features.forEach(f => {
-    const [x, y] = P(f.id), c = count(f.subs), tot = Math.max(f.subs.length, 1);
-    let a0 = -Math.PI / 2, rings = "";
-    ["auto", "method", "none"].forEach(k => { if (!c[k]) return; const a1 = a0 + 2 * Math.PI * c[k] / tot - 0.0001; rings += `<path d="${arc(26, a0, a1)}" stroke="var(--${k})" stroke-width="5" fill="none"/>`; a0 = a1 + 0.0001; });
-    const below = Math.sin(pos[f.id].t) > -0.2;
-    const ly = below ? 46 : -40;
-    nodes += `<g class="node feature" data-id="${esc(f.id)}" transform="translate(${x},${y})"><circle class="ring" r="34" style="display:none"/><circle class="disc" r="26"/>${rings}<text class="fid" text-anchor="middle" dy=".35em">${esc(f.id)}</text><text class="fname" text-anchor="middle" y="${ly}">${esc(f.name)}</text><text class="fsub" text-anchor="middle" y="${ly + 15}">${c.auto}·${c.method}·${c.none} · 진입점 ${surfacesOf(f.key).length}</text></g>`;
+    const {x, y} = pos[f.id], c = count(f.subs), t = Math.max(f.subs.length, 1);
+    let bx = 0, segs = "";
+    ["auto", "method", "none"].forEach(k => { const w = FW * c[k] / t; if (w) segs += `<rect x="${bx}" y="44" width="${w}" height="4" fill="var(--${k})"/>`; bx += w; });
+    nodes += `<g class="node feature ${verified.feature(f) ? "" : "uvn"}" data-id="${esc(f.id)}" transform="translate(${x},${y - 24})"><rect class="ring" x="-4" y="-4" width="${FW + 8}" height="56" rx="12" style="display:none"/><rect class="box" width="${FW}" height="48" rx="9"/><text class="t1" x="10" y="17">${esc(f.id)}</text><text class="t2" x="10" y="34">${esc(cut(f.name, narrow ? 12 : 21))}</text><text class="t3" x="${FW - 10}" y="17" text-anchor="end">${c.auto}/${f.subs.length}</text><clipPath id="c-${esc(f.id)}"><rect width="${FW}" height="48" rx="9"/></clipPath><g clip-path="url(#c-${esc(f.id)})">${segs}</g></g>`;
   });
   if (unmapped.length) {
-    const [x, y] = P("__unmapped");
-    nodes += `<g class="node feature ghostnode" data-id="__unmapped" transform="translate(${x},${y})"><circle class="ring" r="34" style="display:none"/><circle class="disc" r="26"/><text class="fid" text-anchor="middle" dy=".35em">${unmapped.length}</text><text class="fname" text-anchor="middle" y="46">Unmapped</text><text class="fsub" text-anchor="middle" y="61">지도 밖 진입점</text></g>`;
+    const {x, y} = pos.__unmapped;
+    nodes += `<g class="node feature uvn" data-id="__unmapped" transform="translate(${x},${y - 24})"><rect class="ring" x="-4" y="-4" width="${FW + 8}" height="56" rx="12" style="display:none"/><rect class="box" width="${FW}" height="48" rx="9"/><text class="t1" x="10" y="17">Unmapped</text><text class="t3" x="10" y="34">지도 밖 진입점 ${unmapped.length}</text></g>`;
   }
-  nodes += `<g class="hubnode"><circle r="34"/><text text-anchor="middle" dy=".35em">${esc(D.repo)}</text></g>`;
-  const ext = R2 + 175;
+  D.features.forEach(f => f.subs.forEach(s => {
+    const {x, y} = pos[s.id], dot = s.status === "auto" ? `<circle r="6.5" fill="var(--auto)"/>` : s.status === "method" ? `<circle r="5.5" fill="var(--solid)" stroke="var(--method)" stroke-width="2.5"/>` : `<circle r="5.5" fill="none" stroke="var(--none)" stroke-width="1.6" stroke-dasharray="2 2"/>`;
+    nodes += `<g class="node leaf ${verified.sub(s) ? "" : "uvn"}" data-id="${esc(s.id)}" transform="translate(${x},${y})"><circle class="ring" r="11" style="display:none"/>${dot}<text x="13" dy=".35em">${esc(s.id)} <tspan class="n">${esc(cut(s.name, narrow ? 7 : 34))}</tspan></text></g>`;
+  }));
+  const heads = `<text class="colhead" x="12" y="14">진입점</text><text class="colhead" x="${pos[D.features[0]?.id]?.x ?? 0}" y="14">기능</text><text class="colhead" x="${sx - 6}" y="14">끝점 · 하위 기능</text>`;
   const chips = ["auto", "method", "none"].map(k => `<button class="chip ${state.status.has(k) ? "" : "off"}" data-st="${k}" title="${WHY[k]}"><span class="dot" style="background:var(--${k})"></span>${ST[k]} ${S[k]}</button>`).join("");
   return `<div class="stage">
-    <svg class="graph" id="svg" viewBox="${-ext} ${-ext} ${ext * 2} ${ext * 2}"><g id="world"><circle r="${R2}" fill="none" stroke="var(--line)" stroke-dasharray="2 6"/><circle r="${R1}" fill="none" stroke="var(--line)" stroke-dasharray="2 6"/>${edges}${nodes}</g></svg>
+    <div class="canvas" id="canvas"><svg class="graph" id="svg" viewBox="0 0 ${W} ${H}" width="${W * state.zoom}" height="${H * state.zoom}" data-w="${W}" data-h="${H}"><g id="world">${heads}${edges}${nodes}</g></svg></div>
     <div class="toolbar"><input class="search" id="q" type="search" placeholder="ID·영어 이름·설명으로 찾기" value="${esc(state.q)}">${chips}</div>
-    <div class="legend"><div><span class="dot" style="background:var(--auto)"></span>자동 검증: 스크립트가 돌린다</div><div><span class="dot" style="background:var(--method)"></span>방법만: 손으로 모는 방법만 있다</div><div><span class="dot" style="background:var(--none)"></span>없음: 검증 방법이 없다</div></div>
-    <div class="zoom"><button data-z="1.25" aria-label="확대">+</button><button data-z="0.8" aria-label="축소">−</button><button data-z="0" aria-label="맞춤">⤢</button></div>
+    <div class="legend"><div class="uvkey"><span class="dot" style="background:var(--faint);opacity:.6"></span>흐린 것 = 자동 검증 없음 (눌러 볼 수 있음)</div><div><span class="dot" style="background:var(--auto)"></span>자동 검증: 스크립트·시험이 돌린다</div><div><span class="dot" style="border:2.5px solid var(--method);box-sizing:border-box"></span>방법만: 손으로 모는 방법만 있다</div><div><span class="dot" style="border:1.6px dashed var(--none);box-sizing:border-box"></span>없음: 검증 방법이 없다</div></div>
+    <div class="zoom"><button data-z="1.2" aria-label="확대">+</button><button data-z="0.83" aria-label="축소">−</button><button data-z="0" aria-label="원래 크기">⤢</button></div>
     <aside class="drawer" id="drawer"></aside>
   </div>`;
 }
@@ -215,6 +228,11 @@ function drawerHtml(id) {
   if (!n) return "";
   const close = `<button class="close" data-close aria-label="닫기">✕</button>`;
   const copy = text => `<button class="copy" data-copy="${esc(text)}">복사</button>`;
+  if (n.kind === "group") {
+    const g = n.g, fname = k => { const f = D.features.find(x => x.key === k); return f ? `${f.id} ${f.name}` : k; };
+    return `${close}<div class="kicker">ENTRY POINTS</div><div class="ename"><code>${esc(g.name)}</code></div><p class="desc">이 묶음의 진입점 ${g.items.length}개 가운데 ${g.items.filter(s => s.mapped_in.length).length}개가 기능 지도에 있다. ${verified.group(g) ? "" : "이 묶음이 닿는 기능에는 자동 검증이 없다."}</p>
+      <div class="box"><h4>진입점</h4>${g.items.map(s => `<div class="proof ${s.mapped_in.length ? "" : "list-uv"}"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")} → ${s.mapped_in.length ? s.mapped_in.map(k => `<a href="#" data-pick="${esc(D.features.find(f => f.key === k).id)}">${esc(fname(k))}</a>`).join(", ") : "지도에 없음"} <span style="color:var(--muted)">${esc(s.where || "")}</span></div>`).join("")}</div>`;
+  }
   if (n.kind === "unmapped") {
     return `${close}<div class="kicker">UNMAPPED</div><div class="ename"><code>Unmapped</code></div><p class="desc">코드에는 있는데 기능 지도에 적히지 않은 진입점 ${unmapped.length}개다. 지도에 넣으면 검증 방법을 붙일 수 있다.</p>
       ${D.gaps.length ? `<div class="box"><h4>지도가 스스로 밝힌 빈칸</h4><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul></div>` : ""}
@@ -231,49 +249,25 @@ function drawerHtml(id) {
   const s = n.s, f = n.f;
   return `${close}<div class="kicker">SUB-FEATURE · <a href="#" data-pick="${esc(f.id)}">${esc(f.id)} ${esc(f.name)}</a></div><div class="ename"><code>${esc(s.id)} ${esc(s.name)}</code>${copy(`${s.id} ${s.name}`)}</div>
     <p class="desc">${esc(s.desc) || '<span style="color:var(--muted)">한국어 설명이 없다.</span>'}</p>
-    <span class="pill"><span class="dot" style="background:var(--${s.status})"></span>${ST[s.status]}</span><div class="why">${WHY[s.status]}</div>
+    <span class="pill"><span class="dot" style="background:var(--${s.status})"></span>${ST[s.status]}</span>${s.proofs.some(p => p.named) ? '<span class="pill" style="margin-left:6px">이름 파일이 짚은 시험</span>' : ""}<div class="why">${WHY[s.status]}</div>
     ${s.proofs.length ? `<div class="box"><h4>근거</h4>${s.proofs.map(p => `<div class="proof"><code>${esc(p.path)}:${p.line}</code> ${esc(p.text)}</div>`).join("")}</div>` : ""}
     <div class="box"><details><summary>원문</summary><div class="orig">${s.html}</div></details></div>`;
 }
 
-let view = null, centerOn = () => {};
+let centerOn = () => {};
 function setupGraph() {
-  const svg = document.getElementById("svg"), world = document.getElementById("world"), drawer = document.getElementById("drawer");
-  const vb = svg.viewBox.baseVal, base = {x: vb.x, y: vb.y, w: vb.width, h: vb.height};
-  view = view || {...base};
-  const apply = () => svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
-  const fit = () => { view = {...base}; apply(); };
-  const zoomAt = (k, cx, cy) => { const nw = Math.min(base.w * 3, Math.max(base.w / 8, view.w / k)), r = nw / view.w; view.x = cx - (cx - view.x) * r; view.y = cy - (cy - view.y) * r; view.w = nw; view.h = view.h * r; apply(); };
-  const toWorld = (ex, ey) => { const b = svg.getBoundingClientRect(), s = Math.max(view.w / b.width, view.h / b.height); return [view.x + (ex - b.left - (b.width - view.w / s) / 2) * s, view.y + (ey - b.top - (b.height - view.h / s) / 2) * s]; };
-  apply();
-  svg.addEventListener("wheel", e => { e.preventDefault(); const [x, y] = toWorld(e.clientX, e.clientY); zoomAt(Math.exp(-e.deltaY * 0.0015), x, y); }, {passive: false});
-  const pts = new Map(); let moved = 0, pinch = 0;
-  svg.addEventListener("pointerdown", e => { svg.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); moved = 0; svg.classList.add("drag"); });
-  svg.addEventListener("pointermove", e => {
-    if (!pts.has(e.pointerId)) return;
-    const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
-    if (pts.size === 2) {
-      const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
-      if (pinch) { const [x, y] = toWorld((a[0] + b[0]) / 2, (a[1] + b[1]) / 2); zoomAt(d / pinch, x, y); }
-      pinch = d; moved += 10; return;
-    }
-    const b = svg.getBoundingClientRect(), s = Math.max(view.w / b.width, view.h / b.height);
-    view.x -= (e.clientX - prev[0]) * s; view.y -= (e.clientY - prev[1]) * s; moved += Math.abs(e.clientX - prev[0]) + Math.abs(e.clientY - prev[1]); apply();
-  });
-  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; if (!pts.size) svg.classList.remove("drag"); };
-  svg.addEventListener("pointerup", e => { up(e); if (moved < 5) { const g = document.elementsFromPoint(e.clientX, e.clientY).map(el => el.closest && el.closest(".node")).find(Boolean); g ? select(g.dataset.id) : select(null); } });
-  svg.addEventListener("pointercancel", up);
+  const svg = document.getElementById("svg"), canvas = document.getElementById("canvas"), drawer = document.getElementById("drawer");
+  const zoomTo = z => { const cx = (canvas.scrollLeft + canvas.clientWidth / 2) / state.zoom, cy = (canvas.scrollTop + canvas.clientHeight / 2) / state.zoom; state.zoom = Math.min(2.5, Math.max(0.4, z)); svg.setAttribute("width", svg.dataset.w * state.zoom); svg.setAttribute("height", svg.dataset.h * state.zoom); canvas.scrollLeft = cx * state.zoom - canvas.clientWidth / 2; canvas.scrollTop = cy * state.zoom - canvas.clientHeight / 2; };
+  svg.addEventListener("click", e => { const g = e.target.closest(".node"); select(g ? g.dataset.id : null); });
   svg.addEventListener("mouseover", e => { const g = e.target.closest(".node"); if (g && !state.sel) focus(g.dataset.id); });
   svg.addEventListener("mouseout", e => { if (e.target.closest(".node") && !state.sel) focus(null); });
   centerOn = g => {
-    const b = svg.getBoundingClientRect(), r = g.getBoundingClientRect(), d = drawer.getBoundingClientRect(), narrow = innerWidth <= 760;
-    const tx = narrow ? b.left + b.width / 2 : b.left + (d.left - b.left) / 2, ty = narrow ? b.top + (d.top - b.top) / 2 : b.top + b.height / 2;
-    const s = Math.max(view.w / b.width, view.h / b.height), dx = (r.left + r.width / 2 - tx) * s, dy = (r.top + r.height / 2 - ty) * s;
-    const from = {x: view.x, y: view.y}, t0 = performance.now();
-    const step = now => { const k = Math.min(1, (now - t0) / 260), e = 1 - Math.pow(1 - k, 3); view.x = from.x + dx * e; view.y = from.y + dy * e; apply(); if (k < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step);
+    const c = canvas.getBoundingClientRect(), r = g.getBoundingClientRect(), narrow = innerWidth <= 760;
+    const sheetTop = c.bottom - drawer.offsetHeight - 8, panelLeft = c.right - drawer.offsetWidth - 12;
+    const tx = narrow ? c.left + c.width / 2 : c.left + (panelLeft - c.left) / 2, ty = narrow ? c.top + 70 + (sheetTop - c.top - 70) / 2 : c.top + c.height / 2;
+    canvas.scrollBy({left: r.left + r.width / 2 - tx, top: r.top + r.height / 2 - ty, behavior: "smooth"});
   };
-  document.querySelector(".zoom").onclick = e => { const z = +e.target.dataset.z; if (e.target.dataset.z === undefined) return; z ? zoomAt(z, view.x + view.w / 2, view.y + view.h / 2) : fit(); };
+  document.querySelector(".zoom").onclick = e => { const b = e.target.closest("[data-z]"); if (!b) return; const z = +b.dataset.z; zoomTo(z ? state.zoom * z : 1); };
   drawer.onclick = e => {
     const c = e.target.closest("[data-copy]"), p = e.target.closest("[data-pick]");
     if (c) { navigator.clipboard?.writeText(c.dataset.copy); c.textContent = "복사됨"; setTimeout(() => c.textContent = "복사", 1200); }
@@ -284,25 +278,29 @@ function setupGraph() {
   if (state.sel) select(state.sel);
 }
 
+function groupsTo(fid) { const f = D.features.find(x => x.id === fid); return GROUPS.filter(g => g.items.some(s => fid === "__unmapped" ? !s.mapped_in.length : f && s.mapped_in.includes(f.key))).map(g => g.id); }
 function related(id) {
   const n = NODES[id], ids = new Set([id]);
-  if (n?.kind === "feature") n.f.subs.forEach(s => ids.add(s.id));
-  if (n?.kind === "sub") ids.add(n.f.id);
+  if (n?.kind === "feature") { n.f.subs.forEach(s => ids.add(s.id)); groupsTo(n.f.id).forEach(g => ids.add(g)); }
+  if (n?.kind === "sub") { ids.add(n.f.id); groupsTo(n.f.id).forEach(g => ids.add(g)); }
+  if (n?.kind === "unmapped") groupsTo("__unmapped").forEach(g => ids.add(g));
+  if (n?.kind === "group") n.g.items.forEach(s => s.mapped_in.length ? s.mapped_in.forEach(k => ids.add(D.features.find(f => f.key === k).id)) : ids.add("__unmapped"));
   return ids;
 }
 
 function focus(id) {
   const ids = id ? related(id) : null;
-  document.querySelectorAll("#world .node").forEach(g => g.classList.toggle("dim", !!ids && !ids.has(g.dataset.id)));
+  document.querySelectorAll("#world .node").forEach(g => { g.classList.toggle("dim", !!ids && !ids.has(g.dataset.id)); g.classList.toggle("hotn", !!ids && g.dataset.id === id); });
   document.querySelectorAll("#world .edge").forEach(p => { const f = p.dataset.for.split(" "); const on = ids && f.every(x => ids.has(x)); p.classList.toggle("hot", !!on); p.classList.toggle("dim", !!ids && !on); });
   if (!id) filter();
 }
 
 function filter() {
   if (state.sel) return;
-  const q = state.q.trim();
+  const q = state.q.trim().toLowerCase();
   document.querySelectorAll("#world .leaf").forEach(g => g.classList.toggle("dim", !matches(NODES[g.dataset.id].s)));
-  document.querySelectorAll("#world .feature").forEach(g => { const n = NODES[g.dataset.id]; g.classList.toggle("dim", !!q && n.kind === "feature" && !n.f.subs.some(matches) && !`${n.f.id} ${n.f.name} ${n.f.desc}`.toLowerCase().includes(q.toLowerCase())); });
+  document.querySelectorAll("#world .feature").forEach(g => { const n = NODES[g.dataset.id]; g.classList.toggle("dim", !!q && n.kind === "feature" && !n.f.subs.some(matches) && !`${n.f.id} ${n.f.name} ${n.f.desc}`.toLowerCase().includes(q)); });
+  document.querySelectorAll("#world .grp").forEach(g => g.classList.toggle("dim", !!q && !JSON.stringify(NODES[g.dataset.id].g).toLowerCase().includes(q)));
   document.querySelectorAll("#world .edge").forEach(p => p.classList.remove("hot", "dim"));
 }
 
@@ -321,7 +319,7 @@ function select(id) {
 function listView() {
   const chips = ["auto", "method", "none"].map(k => `<button class="chip ${state.status.has(k) ? "" : "off"}" data-st="${k}"><span class="dot" style="background:var(--${k})"></span>${ST[k]} ${S[k]}</button>`).join("");
   const body = D.features.map(f => {
-    const rows = f.subs.filter(matches).map(s => `<tr><td><span class="dot" style="background:var(--${s.status});display:inline-block" title="${ST[s.status]}"></span></td><td class="id">${esc(s.id)}</td><td class="nm">${esc(s.name)}</td><td>${esc(s.desc)}${s.proofs.length ? `<div class="proof" style="color:var(--muted)"><code>${esc(s.proofs[0].path)}:${s.proofs[0].line}</code></div>` : ""}</td></tr>`).join("");
+    const rows = f.subs.filter(matches).map(s => `<tr class="${s.status === "auto" ? "" : "list-uv"}"><td><span class="dot" style="background:var(--${s.status});display:inline-block" title="${ST[s.status]}"></span></td><td class="id">${esc(s.id)}</td><td class="nm">${esc(s.name)}</td><td>${esc(s.desc)}${s.proofs.length ? `<div class="proof" style="color:var(--muted)"><code>${esc(s.proofs[0].path)}:${s.proofs[0].line}</code></div>` : ""}</td></tr>`).join("");
     if (!rows) return "";
     const c = count(f.subs);
     return `<div class="fh"><b>${esc(f.id)}</b><span>${esc(f.name)}</span><small>${esc(f.desc)}</small></div>${bar(c)}<table>${rows}</table>`;

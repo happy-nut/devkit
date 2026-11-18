@@ -144,7 +144,8 @@ def read_map(features_dir, repo, ignore=()):
                 subs.append({"id": sid, "name": default_name(b, sid), "html": inline(b), "method": re.search(r"(?<![\w-])" + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
         title_text = h1.group(1).strip() if h1 else name[:-3]
         fid = FEATURE_ID.match(title_text)
-        features.append({"key": name[:-3], "id": fid.group(1) if fid else name[:-3], "name": (fid.group(2) if fid else title_text).strip(), "file": name, "title": title_text,
+        own_id = fid.group(1) if fid else name if any(x["id"] == name[:-3] for x in subs) else name[:-3]
+        features.append({"key": name[:-3], "id": own_id, "name": (fid.group(2) if fid else title_text).strip(), "file": name, "title": title_text,
                          "purpose": markdown(purpose), "subs": subs, "text": text,
                          "sections": [{"name": k, "html": markdown(v)} for k, v in sections.items()]})
     files = list(repo_files(repo, features_dir, ignore))
@@ -163,13 +164,31 @@ def default_name(bullet, sid):
     return re.sub(r"[`*]", "", name).strip()[:60] or sid
 
 
-def apply_names(data, names):
+def verified_by(repo, ref):
+    path, _, symbol = ref.partition("::")
+    full = os.path.join(repo, path)
+    if not os.path.isfile(full):
+        return None
+    lines = open(full, encoding="utf-8", errors="replace").read().splitlines()
+    needle = symbol.split("::")[-1]
+    hit = next((n for n, line in enumerate(lines, 1) if needle in line), None) if needle else 1
+    return hit and {"path": path, "line": hit, "text": (lines[hit - 1].strip() if lines else "")[:160], "named": True}
+
+
+def apply_names(data, names, repo="."):
     problems = []
     for f in data["features"]:
         for item in [f] + f["subs"]:
             given = names.get(item["id"]) or (names.get(f["key"]) if item is f else None) or {}
             item["name"] = given.get("name") or item["name"]
             item["desc"] = given.get("desc", "")
+            for ref in given.get("verified_by", []) if item is not f else []:
+                proof = verified_by(repo, ref)
+                if proof:
+                    item["proofs"].append(proof)
+                    item["status"] = "auto"
+                else:
+                    problems.append(f"근거를 못 찾음 {item['id']}: {ref}")
             if HANGUL.search(item["name"]):
                 problems.append(f"이름에 한글 {item['id']}: {item['name']}")
             if not HANGUL.search(item["desc"]):
@@ -200,7 +219,7 @@ def summary(data):
 
 def build(features_dir, repo, surfaces_path=None, names_path=None):
     data = read_map(features_dir, repo, {os.path.realpath(p) for p in (surfaces_path, names_path) if p})
-    data["problems"] = apply_names(data, json.load(open(names_path, encoding="utf-8")) if names_path else {})
+    data["problems"] = apply_names(data, json.load(open(names_path, encoding="utf-8")) if names_path else {}, repo)
     surfaces = json.load(open(surfaces_path, encoding="utf-8")) if surfaces_path else []
     data["surfaces"] = match_surfaces(surfaces, data["features"])
     for f in data["features"]:
@@ -230,12 +249,16 @@ def self_test():
         with open(os.path.join(feat, "README.md"), "a") as f:
             f.write("\n## Not mapped yet\n\n- 내보내기 메뉴,\n  설정 화면\n- 휴지통\n")
         open(os.path.join(t, "drive.sh"), "w").write("node drive.mjs create-open\n")
+        open(os.path.join(feat, "inbox.md"), "w").write("# Inbox\n\n## Sub-features\n\n- `inbox` 받은 편지함 목록.\n")
         surf = os.path.join(t, "surfaces.json")
         json.dump([{"id": "new", "label": "새 노트", "match": ["New note"]}, {"id": "export", "label": "내보내기", "match": ["Export all"]}, {"id": "disc", "label": "앞부분만 겹침", "match": ["Disc"]}, {"id": "to", "label": "짧은 키", "match": ["to"]}], open(surf, "w"))
         names = os.path.join(t, "names.json")
         json.dump({"create-note": {"name": "Create a note", "desc": "브라우저와 CLI 로 노트를 만든다."},
                    "create-open": {"name": "open editor", "desc": "새 노트 편집기를 연다."},
-                   "create-save": {"name": "저장", "desc": "제목과 본문을 저장한다."}}, open(names, "w"), ensure_ascii=False)
+                   "create-save": {"name": "저장", "desc": "제목과 본문을 저장한다."},
+                   "create-cancel": {"name": "cancel", "verified_by": ["tests/test_notes.py::test_cancel_keeps_nothing", "tests/missing.py::test_x"]}}, open(names, "w"), ensure_ascii=False)
+        os.makedirs(os.path.join(t, "tests"))
+        open(os.path.join(t, "tests", "test_notes.py"), "w").write("def test_cancel_keeps_nothing():\n    pass\n")
         data = build(feat, t, surf, names)
         named = {s["id"]: s for f in data["features"] for s in [f] + f["subs"]}
         assert named["create-open"]["name"] == "open editor" and named["create-open"]["desc"].startswith("새 노트"), "이름 파일이 영어 이름과 한국어 설명을 준다"
@@ -245,9 +268,13 @@ def self_test():
         status = {s["id"]: s["status"] for f in data["features"] for s in f["subs"]}
         assert status["create-open"] == "auto", "실행 파일이 ID 를 가리키면 자동 검증"
         assert status["create-save"] == "method", "Driving 글머리에 ID 가 있으면 방법만"
-        assert status["create-cancel"] == "none", "어디에도 없으면 없음"
+        assert status["create-cancel"] == "auto", "이름 파일의 verified_by 가 짚은 시험이 실제로 있으면 자동 검증(ID 를 안 담는 백엔드·라이브러리 시험)"
+        assert "근거를 못 찾음 create-cancel: tests/missing.py::test_x" in data["problems"], "짚은 시험 파일이 없으면 잡는다"
+        named_proof = next(s for f in data["features"] for s in f["subs"] if s["id"] == "create-cancel")["proofs"][0]
+        assert named_proof["path"] == "tests/test_notes.py" and named_proof["line"] == 1, "근거는 그 시험이 정의된 줄"
         assert [s["mapped_in"] for s in data["surfaces"]] == [["create-note"], [], [], []], "진입점은 기능 파일 글에 낱말째 있어야 맞는다(Disc 는 Discard 에, 짧은 키 to 는 백틱 없는 to 에 걸리지 않는다)"
         assert data["gaps"] == ["내보내기 메뉴, 설정 화면", "휴지통"], "빈칸 글머리는 이어지는 줄까지 하나로 읽는다"
+        assert next(f["id"] for f in data["features"] if f["key"] == "inbox") == "inbox.md", "파일 이름 ID 가 하위 기능 ID 와 겹치면 기능 ID 는 파일 이름(.md 포함)이다"
         page = render(data)
         assert "create-cancel" in page and "__DATA__" not in page, "HTML 에 데이터가 들어간다"
     print("featuremap self-test OK")
