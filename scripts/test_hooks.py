@@ -203,6 +203,22 @@ with tempfile.TemporaryDirectory() as t:
         elif reason and 'SHOW_REASON' in os.environ:
             print(f'{name}\n  되돌림: {reason}')
 
+def say(text):
+    return {'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': text}]}}
+
+paused = [{'type': 'user', 'message': {'content': '47건 한번 보고 결정내리고 싶은데'}}, plan, say('47건 목록이에요. 사람이 고를 차례라 기다려요.'), wait_for_human]
+with tempfile.TemporaryDirectory() as t:
+    p = os.path.join(t, 'tx.jsonl')
+    for name, entries, expect in [
+        ('사람 차례로 멈춤', paused, False),
+        ('사람이 정했는데 중간 결론만 말하고 멈춤', paused + [human_decides, say('1번으로 할게요.')], True),
+        ('사람이 정한 뒤 끝까지 감', paused + [human_decides, advance, advance, say('보고와 프롬프트를 다 썼어요.'), wrap], False),
+    ]:
+        open(p, 'w').write(''.join(json.dumps(e) + '\n' for e in entries))
+        blocked = any('block' in run(s, {'transcript_path': p, 'cwd': t}) for s in stop_scripts())
+        if blocked != expect:
+            fails.append(f'Stop 훅 전체 여러 턴: {name}')
+
 if fails:
     sys.exit('훅 시험 실패:\n' + '\n'.join(fails))
 print('훅 시험 OK')
