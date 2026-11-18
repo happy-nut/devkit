@@ -144,7 +144,7 @@ docs/authoring.md                이 저장소를 고치는 규칙
 | 훅 | 막는 것 |
 |---|---|
 | `hooks/korean-stop.py` (Stop) | 사용자에게 한 마지막 말이 한국어가 아니면 한 번 되돌려 다시 쓰게 한다. 코드, 경로, 짧은 줄은 세지 않는다 |
-| `hooks/open-plan-stop.py` (Stop) | 작업 목록(`update_plan`, `TodoWrite`)에 끝나지 않은 단계가 남았는데 `wrap_up` 없이 턴을 닫으면 한 번 되돌린다. 기다리는 백그라운드 작업이 있으면 통과한다 |
+| `hooks/open-plan-stop.py` (Stop) | 작업 목록(`update_plan`, `TodoWrite`)에 끝나지 않은 단계가 남았는데 `wrap_up` 없이 턴을 닫으면 한 번 되돌린다. 기다리는 백그라운드 작업이 있으면 통과한다. 사람에게 물어 `wrap_up(blocked: true)` 로 멈춘 목록은 다음 사람 메시지에 되살아나서, 한 단계도 잇지 않고 닫으면 되돌린다 |
 | `hooks/correction-stop.py` (Stop) | 이번 턴의 사람 메시지가 교정(`/dev:correct` 또는 「제대로」「아직도」「할 때만」 같은 말)인데, 그 턴에 검사·테스트·훅·린트 파일이 하나도 바뀌지 않았으면 한 번 되돌린다. 바뀐 파일은 대화 기록의 편집과 작업 폴더 git(그 턴 이후 커밋, 커밋 안 한 변경)으로 본다. 메모리와 `.md` 는 장치로 치지 않는다. 보고에 「판단이라 장치화 불가: <이유>」 나 「교정 아님: <이유>」 를 쓰면 통과한다 |
 | `hooks/guard-bash.py` (PreToolUse, Bash) | 바뀐 파일이 0개인 PR, 체크가 아직 안 붙었거나 돌고 있거나 실패한 PR 의 `gh pr merge` 를 막는다. 테스트 출력을 `tail` 같은 파이프로 넘긴 뒤 `&&` 로 커밋이나 머지를 잇는 명령도 막는다. 그런 명령에서는 테스트 실패가 묻힌다 |
 | `hooks/no-new-comments.py` (PreToolUse, Edit·Write) | 코드 파일에 새 주석을 넣는 편집을 한 번 막는다. 같은 편집을 다시 하면 통과한다 |

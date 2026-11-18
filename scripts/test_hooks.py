@@ -34,6 +34,8 @@ with tempfile.TemporaryDirectory() as t:
     bg = tool('Bash', {'command': 'sleep 99', 'run_in_background': True}, 'toolu_bg1')
     note = {'type': 'user', 'message': {'content': '<task-notification>\n<tool-use-id>toolu_bg1</tool-use-id>\n</task-notification>'}}
     side = dict(plan, isSidechain=True)
+    wait_for_human = tool('mcp__ccd_turn__wrap_up', {'recap': '47건을 보였어요.', 'ask': '어느 쪽부터 할까요?', 'blocked': True})
+    human_decides = {'type': 'user', 'message': {'content': '1번으로 가자'}}
     for name, entries, expect in [
         ('미완료를 두고 멈춤', [plan, advance], True),
         ('다 끝내고 wrap_up', [plan, advance, advance, wrap], False),
@@ -43,6 +45,11 @@ with tempfile.TemporaryDirectory() as t:
         ('작업 목록 없음', [], False),
         ('서브에이전트의 목록', [side], False),
         ('TodoWrite 미완료', [tool('TodoWrite', {'todos': [{'content': 'a', 'status': 'pending'}]})], True),
+        ('사람 차례라 기다림', [plan, wait_for_human], False),
+        ('사람이 정했는데 남은 단계 없이 끝냄', [plan, wait_for_human, human_decides], True),
+        ('사람이 정했는데 한 단계도 안 하고 wrap_up', [plan, wait_for_human, human_decides, wrap], True),
+        ('사람이 정한 뒤 이어서 끝까지', [plan, wait_for_human, human_decides, advance, advance, wrap], False),
+        ('사람이 정한 뒤 또 사람에게 물음', [plan, wait_for_human, human_decides, wait_for_human], False),
     ]:
         open(p, 'w').write(''.join(json.dumps(e) + '\n' for e in entries))
         if ('block' in run('open-plan-stop.py', {'transcript_path': p})) != expect:
