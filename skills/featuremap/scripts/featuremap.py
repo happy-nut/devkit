@@ -5,6 +5,7 @@ RUNNABLE = re.compile(r"\b(node|npm|npx|pnpm|yarn|bun|deno|python3?|pytest|bash|
 GAP_HEADINGS = re.compile(r"^##\s+(Not mapped|지도에 없|아직 지도)", re.I)
 SECTION = re.compile(r"^##\s+(.+?)\s*$", re.M)
 NOT_AFTER_WORD_OR_CSS_DOT = r"(?<![\w.-])"
+IN_CLASS_ATTRIBUTE = re.compile(r"""class(Name)?\s*=\s*["'{][^"'}]*$""")
 SKIP = re.compile(r"(^|/)(node_modules|dist|build|vendor|\.git)/")
 HANGUL = re.compile(r"[가-힣]")
 FEATURE_ID = re.compile(r"^([A-Z][A-Z0-9_-]*)\s+[\u2014\u2013-]+\s+(.+)$")
@@ -117,6 +118,8 @@ def proofs_for(ids, files):
         prose = path.lower().endswith((".md", ".txt"))
         for n, line in enumerate(lines, 1):
             for m in pat.finditer(line):
+                if IN_CLASS_ATTRIBUTE.search(line[:m.start()]):
+                    continue
                 if not prose or RUNNABLE.search(line):
                     found[m.group(1)].append({"path": path, "line": n, "text": line.strip()[:160]})
     return found
@@ -231,7 +234,7 @@ def self_test():
         with open(os.path.join(feat, "README.md"), "a") as f:
             f.write("\n## Not mapped yet\n\n- 내보내기 메뉴,\n  설정 화면\n- 휴지통\n")
         open(os.path.join(t, "drive.sh"), "w").write("node drive.mjs create-open\n")
-        open(os.path.join(t, "app.js"), "w").write("click('.create-cancel')\n")
+        open(os.path.join(t, "app.js"), "w").write("click('.create-cancel')\n<b class=\"x create-cancel\">\n")
         driven = open(os.path.join(feat, "create-note.md")).read().replace("- **초안 취소.**", "- **초안 취소.** `.create-cancel` 단추.")
         open(os.path.join(feat, "create-note.md"), "w").write(driven)
         surf = os.path.join(t, "surfaces.json")
