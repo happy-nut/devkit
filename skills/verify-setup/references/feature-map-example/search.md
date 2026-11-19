@@ -1,15 +1,15 @@
-# 노트 찾기
+# Search notes
 
 사용자는 제목이나 본문 글로 노트를 찾고, 맞는 노트를 열어 보고, 결과 없음과 검색 불가를 구분할 수 있다.
 
 ## Sub-features
 
-- `search-open` 은 지원하는 브라우저 진입점마다 검색을 연다.
-- `search-match` 는 노트 데이터를 바꾸지 않고 제목·본문이 맞는 것을 돌려준다.
-- `search-open-result` 는 결과를 노트 편집기로 연다.
-- `search-empty` 는 맞는 것이 없는 검색어에 완결된 빈 상태를 보인다.
-- `search-clear` 는 검색어를 지우고 최근 노트 화면으로 돌아간다.
-- `search-cli` 는 터미널에서 같은 결과를 돌려준다.
+- `search-open` **open search**: 지원하는 브라우저 진입점마다 검색을 연다.
+- `search-match` **match**: 노트 데이터를 바꾸지 않고 제목·본문이 맞는 것을 돌려준다.
+- `search-open-result` **open result**: 결과를 노트 편집기로 연다.
+- `search-empty` **empty state**: 맞는 것이 없는 검색어에 완결된 빈 상태를 보인다.
+- `search-clear` **clear**: 검색어를 지우고 최근 노트 화면으로 돌아간다.
+- `search-cli` **search from CLI**: 터미널에서 같은 결과를 돌려준다.
 
 ## How to get to it (user POV)
 

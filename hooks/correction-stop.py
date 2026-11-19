@@ -62,17 +62,30 @@ def changed_in_repo(cwd, since):
     return committed + dirty
 
 
-def is_device(path):
+SELF_TEST = re.compile(r"--self-test|def self_test|function selfTest")
+
+
+def has_self_test(path, cwd):
+    full = path if os.path.isabs(path) else os.path.join(cwd or "", path)
+    try:
+        return os.path.getsize(full) < 2_000_000 and bool(SELF_TEST.search(open(full, encoding="utf-8", errors="ignore").read()))
+    except OSError:
+        return False
+
+
+def is_device(path, cwd=None):
     home_claude = os.path.join(os.path.expanduser("~"), ".claude") + os.sep
-    return bool(path) and not path.startswith(home_claude) and not path.lower().endswith(PROSE) and bool(DEVICE_PATH.search(path))
+    if not path or path.startswith(home_claude) or path.lower().endswith(PROSE):
+        return False
+    return bool(DEVICE_PATH.search(path)) or has_self_test(path, cwd)
 
 
-def verdict(turn, repo_files):
+def verdict(turn, repo_files, cwd=None):
     if not turn or not is_correction(turn["text"]):
         return None
     if any(w in t for t in turn["said"] for w in WAIVED):
         return None
-    if any(is_device(p) for p in turn["edited"] + repo_files):
+    if any(is_device(p, cwd) for p in turn["edited"] + repo_files):
         return None
     quote = re.sub(r"<command-message>.*?</command-name>|</?command-args>", "", turn["text"], flags=re.S).strip()[:60]
     return (
@@ -89,7 +102,7 @@ if __name__ == "__main__":
         sys.exit(0)
     try:
         turn = last_turn(open(d["transcript_path"], encoding="utf-8", errors="replace"))
-        reason = verdict(turn, changed_in_repo(d.get("cwd"), turn and turn["at"]) if turn and is_correction(turn["text"]) else [])
+        reason = verdict(turn, changed_in_repo(d.get("cwd"), turn and turn["at"]) if turn and is_correction(turn["text"]) else [], d.get("cwd"))
     except Exception:
         sys.exit(0)
     if reason:

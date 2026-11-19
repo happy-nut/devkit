@@ -137,16 +137,20 @@ def read_map(features_dir, repo, ignore=()):
         purpose = re.sub(r"^# .+$", "", head, flags=re.M).strip()
         _, subs_body = find_section(sections, "sub-features", "하위 기능")
         drive_name, drive_body = find_section(sections, "driving", "몰기")
+        _, how_body = find_section(sections, "how to get", "가는 길", "닿는 길", "진입")
         subs = []
         for b in bullets(subs_body):
             sid = token(b)
             if sid:
-                subs.append({"id": sid, "name": default_name(b, sid), "html": inline(b), "method": re.search(r"(?<![\w-])" + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
+                named = MAP_NAME.match(b)
+                subs.append({"id": sid, "text": b, "name": default_name(b, sid), "map_name": re.sub(r"`", "", named.group(1)).strip() if named else "",
+                             "map_desc": plain(named.group(2)) if named else "", "html": inline(b), "method": re.search(r"(?<![\w-])" + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
         title_text = h1.group(1).strip() if h1 else name[:-3]
         fid = FEATURE_ID.match(title_text)
         own_id = fid.group(1) if fid else name if any(x["id"] == name[:-3] for x in subs) else name[:-3]
-        features.append({"key": name[:-3], "id": own_id, "name": (fid.group(2) if fid else title_text).strip(), "file": name, "title": title_text,
-                         "purpose": markdown(purpose), "subs": subs, "text": text,
+        fname = (fid.group(2) if fid else title_text).strip()
+        features.append({"key": name[:-3], "id": own_id, "name": fname, "map_name": fname, "map_desc": plain(re.split(r"(?<=[.。])\s", purpose.strip())[0]) if purpose.strip() else "", "file": name, "title": title_text,
+                         "purpose": markdown(purpose), "subs": subs, "drive": drive_body,
                          "sections": [{"name": k, "html": markdown(v)} for k, v in sections.items()]})
     files = list(repo_files(repo, features_dir, ignore))
     proofs = proofs_for([s["id"] for f in features for s in f["subs"]], files)
@@ -155,6 +159,13 @@ def read_map(features_dir, repo, ignore=()):
             s["proofs"] = proofs[s["id"]][:8]
             s["status"] = "auto" if s["proofs"] else "method" if s["method"] else "none"
     return {"title": title.group(1).strip() if title else os.path.basename(repo), "features": features, "gaps": gaps}
+
+
+MAP_NAME = re.compile(r"^`[^`]+`\s*\*\*(.+?)\*\*\s*[\u2014\u2013:-]?\s*(.*)$", re.S)
+
+
+def plain(text):
+    return re.sub(r"\s+", " ", re.sub(r"[`*]", "", text or "")).strip()
 
 
 def default_name(bullet, sid):
@@ -180,8 +191,8 @@ def apply_names(data, names, repo="."):
     for f in data["features"]:
         for item in [f] + f["subs"]:
             given = names.get(item["id"]) or (names.get(f["key"]) if item is f else None) or {}
-            item["name"] = given.get("name") or item["name"]
-            item["desc"] = given.get("desc", "")
+            item["name"] = item["map_name"] or given.get("name") or item["name"]
+            item["desc"] = item["map_desc"] if HANGUL.search(item["map_desc"]) else given.get("desc", "")
             for ref in given.get("verified_by", []) if item is not f else []:
                 proof = verified_by(repo, ref)
                 if proof:
@@ -193,6 +204,9 @@ def apply_names(data, names, repo="."):
                 problems.append(f"이름에 한글 {item['id']}: {item['name']}")
             if not HANGUL.search(item["desc"]):
                 problems.append(f"한국어 설명 없음 {item['id']}")
+    for f in data["features"]:
+        for item in [f] + f["subs"]:
+            del item["map_name"], item["map_desc"]
     return problems
 
 
@@ -202,31 +216,107 @@ def mentions(text, needle):
     return bool(needle) and re.search(r"(?<![\w⌘⌥⇧⌃])" + re.escape(needle) + r"(?!\w)", text) is not None
 
 
-def match_surfaces(surfaces, features):
-    for s in surfaces:
-        s["mapped_in"] = [f["key"] for f in features if any(mentions(f["text"], t) for t in s.get("match") or [s.get("label", "")])]
-    return surfaces
+def build_tree(app, entries):
+    root = {"name": app, "path": [], "kids": [], "leaves": []}
+    index = {(): root}
+    for e in entries:
+        node = root
+        for depth in range(1, len(e.get("path") or []) + 1):
+            key = tuple(e["path"][:depth])
+            if key not in index:
+                index[key] = {"name": key[-1], "path": list(key), "kids": [], "leaves": []}
+                node["kids"].append(index[key])
+            node = index[key]
+        node["leaves"].append(e["id"])
+    return root
+
+
+def mece(spec, repo, tree):
+    problems, entries = [], spec.get("entries", [])
+    sources = {x["name"]: x for x in spec.get("sources", [])}
+    if not sources:
+        problems.append("원천 목록 없음: sources 에 진입점 원천(파일과 세는 정규식)을 적는다")
+    for name, src in sources.items():
+        full = os.path.join(repo, src["file"])
+        if not os.path.isfile(full):
+            problems.append(f"원천 파일 없음 {name}: {src['file']}")
+            continue
+        found = re.findall(src["pattern"], open(full, encoding="utf-8", errors="replace").read(), re.M)
+        in_code = len(set(map(str, found))) if src.get("distinct") else len(found)
+        in_graph = sum(e.get("source") == name for e in entries)
+        if in_code != in_graph:
+            problems.append(f"{'누락' if in_code > in_graph else '초과'} {name}: 코드 {in_code} · 그래프 {in_graph} ({src['file']})")
+    seen, places = {}, {}
+    for e in entries:
+        seen[e["id"]] = seen.get(e["id"], 0) + 1
+        if e.get("source") not in sources:
+            problems.append(f"원천 없는 잎 {e['id']}")
+        if not e.get("path"):
+            problems.append(f"길 없는 잎 {e['id']}")
+        place = (tuple(e.get("path") or []), tuple(sorted(e.get("match") or [])))
+        if place[1]:
+            places.setdefault(place, []).append(e["id"])
+    problems += [f"중복 잎 {i} ×{n}" for i, n in seen.items() if n > 1]
+    problems += [f"같은 자리에 같은 진입점 {' / '.join(p)} {' '.join(m)}: {', '.join(ids)}" for (p, m), ids in places.items() if len(ids) > 1]
+    checked = 0
+
+    def walk(node):
+        nonlocal checked
+        checked += 1
+        total = len(node["leaves"]) + sum(walk(k) for k in node["kids"])
+        node["count"] = total
+        names = [k["name"] for k in node["kids"]]
+        if len(set(names)) != len(names):
+            problems.append(f"같은 이름 가지 {' / '.join(node['path']) or node['name']}")
+        if not total:
+            problems.append(f"빈 가지 {' / '.join(node['path'])}")
+        if node["kids"] and sum(k["count"] for k in node["kids"]) + len(node["leaves"]) != total:
+            problems.append(f"합이 안 맞는 가지 {' / '.join(node['path'])}")
+        return total
+    if walk(tree) != len(entries):
+        problems.append(f"뿌리 합 {tree['count']} 이 잎 {len(entries)} 과 다름")
+    return problems, checked
+
+
+def overlay(entries, features):
+    for e in entries:
+        keys = e.get("match") or [e.get("label", "")]
+        via = [(f, sub) for f in features for sub in f["subs"]
+               if any(mentions(sub["text"], k) for k in keys) or any(sub["id"] in line and any(mentions(line, k) for k in keys) for line in f["drive"].splitlines())]
+        e["via"] = [sub["id"] for _, sub in via]
+        states = {sub["status"] for _, sub in via}
+        e["status"] = "auto" if "auto" in states else "method" if "method" in states else "none"
+    return entries
 
 
 def summary(data):
     subs = [s for f in data["features"] for s in f["subs"]]
     count = {k: sum(s["status"] == k for s in subs) for k in ("auto", "method", "none")}
-    surf = data["surfaces"]
+    leaves = data["entries"]
     return {"features": len(data["features"]), "subs": len(subs), **count,
-            "surfaces": len(surf), "mapped": sum(bool(s["mapped_in"]) for s in surf), "gaps": len(data["gaps"]),
-            "naming_problems": len(data["problems"])}
+            "entries": len(leaves), "entries_auto": sum(e["status"] == "auto" for e in leaves),
+            "sources": {n: sum(e.get("source") == n for e in leaves) for n in data["sources"]},
+            "nodes_checked": data["nodes_checked"], "gaps": len(data["gaps"]),
+            "naming_problems": len(data["problems"]), "mece_problems": len(data["mece"]), "mece": not data["mece"]}
 
 
 def build(features_dir, repo, surfaces_path=None, names_path=None):
     data = read_map(features_dir, repo, {os.path.realpath(p) for p in (surfaces_path, names_path) if p})
     data["problems"] = apply_names(data, json.load(open(names_path, encoding="utf-8")) if names_path else {}, repo)
-    surfaces = json.load(open(surfaces_path, encoding="utf-8")) if surfaces_path else []
-    data["surfaces"] = match_surfaces(surfaces, data["features"])
+    spec = json.load(open(surfaces_path, encoding="utf-8")) if surfaces_path else {"sources": [], "entries": []}
+    if isinstance(spec, list):
+        spec = {"sources": [], "entries": spec}
+    data["repo"] = os.path.basename(os.path.realpath(repo))
+    data["entries"] = overlay(spec["entries"], data["features"])
+    data["sources"] = [x["name"] for x in spec.get("sources", [])]
+    data["tree"] = build_tree(spec.get("app") or data["repo"], data["entries"])
+    data["mece"], data["nodes_checked"] = mece(spec, repo, data["tree"])
     for f in data["features"]:
-        del f["text"]
+        for sub in f["subs"]:
+            del sub["text"]
+        del f["drive"]
     data["summary"] = summary(data)
     data["generated"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    data["repo"] = os.path.basename(os.path.realpath(repo))
     return data
 
 
@@ -244,27 +334,31 @@ def self_test():
         os.makedirs(feat)
         for n in os.listdir(example):
             open(os.path.join(feat, n), "w").write(open(os.path.join(example, n), encoding="utf-8").read())
-        driven = open(os.path.join(feat, "create-note.md")).read().replace("- **저장.**", "- `create-save` **저장.**")
+        driven = open(os.path.join(feat, "create-note.md")).read().replace("- **저장.**", "- `create-save` **저장.**").replace("`create-save` **save**", "`create-save` **저장**").replace("`create-open` **open editor**: 브라우저", "`create-open` **open editor**: `New note` 단추 같은 브라우저").replace("`create-cli` **create from CLI**: 터미널에서 같은 모양의 노트를 만든다.", "`create-cli` 는 터미널에서 만든다.")
         open(os.path.join(feat, "create-note.md"), "w").write(driven)
         with open(os.path.join(feat, "README.md"), "a") as f:
             f.write("\n## Not mapped yet\n\n- 내보내기 메뉴,\n  설정 화면\n- 휴지통\n")
         open(os.path.join(t, "drive.sh"), "w").write("node drive.mjs create-open\n")
         open(os.path.join(feat, "inbox.md"), "w").write("# Inbox\n\n## Sub-features\n\n- `inbox` 받은 편지함 목록.\n")
+        open(os.path.join(t, "keys.ts"), "w").write('bind("newNote", "New note")\nbind("search", "/")\nbind("searchBtn", "Search")\n')
         surf = os.path.join(t, "surfaces.json")
-        json.dump([{"id": "new", "label": "새 노트", "match": ["New note"]}, {"id": "export", "label": "내보내기", "match": ["Export all"]}, {"id": "disc", "label": "앞부분만 겹침", "match": ["Disc"]}, {"id": "to", "label": "짧은 키", "match": ["to"]}], open(surf, "w"))
+        good = [{"id": "newNote", "source": "keys", "path": ["단축키", "노트"], "match": ["New note"]},
+                {"id": "search", "source": "keys", "path": ["단축키", "검색"], "match": ["/"]},
+                {"id": "searchBtn", "source": "keys", "path": ["단추", "검색"], "match": ["Search"]}]
+        spec = {"app": "notes", "sources": [{"name": "keys", "file": "keys.ts", "pattern": r"^bind\("}], "entries": good}
+        json.dump(spec, open(surf, "w"), ensure_ascii=False)
         names = os.path.join(t, "names.json")
-        json.dump({"create-note": {"name": "Create a note", "desc": "브라우저와 CLI 로 노트를 만든다."},
-                   "create-open": {"name": "open editor", "desc": "새 노트 편집기를 연다."},
-                   "create-save": {"name": "저장", "desc": "제목과 본문을 저장한다."},
-                   "create-cancel": {"name": "cancel", "verified_by": ["tests/test_notes.py::test_cancel_keeps_nothing", "tests/missing.py::test_x"]}}, open(names, "w"), ensure_ascii=False)
+        json.dump({"create-cli": {"name": "cli", "desc": "터미널에서 만든다."},
+                   "create-cancel": { "verified_by": ["tests/test_notes.py::test_cancel_keeps_nothing", "tests/missing.py::test_x"]}}, open(names, "w"), ensure_ascii=False)
         os.makedirs(os.path.join(t, "tests"))
         open(os.path.join(t, "tests", "test_notes.py"), "w").write("def test_cancel_keeps_nothing():\n    pass\n")
         data = build(feat, t, surf, names)
         named = {s["id"]: s for f in data["features"] for s in [f] + f["subs"]}
-        assert named["create-open"]["name"] == "open editor" and named["create-open"]["desc"].startswith("새 노트"), "이름 파일이 영어 이름과 한국어 설명을 준다"
-        assert named["create-note"]["name"] == "Create a note", "기능도 파일 이름으로 이름을 받는다"
+        assert named["create-open"]["name"] == "open editor" and "편집기를 연다" in named["create-open"]["desc"], "영어 이름(굵게)과 한국어 설명은 지도 글머리에서 읽는다"
+        assert named["create-note"]["name"] == "Create a note" and named["create-note"]["desc"].startswith("사용자는"), "기능 이름은 H1, 설명은 첫 문장"
         assert "이름에 한글 create-save: 저장" in data["problems"], "이름에 한글이 있으면 잡는다"
-        assert "한국어 설명 없음 create-cancel" in data["problems"], "한국어 설명이 빠지면 잡는다"
+        assert named["create-cli"]["name"] == "cli", "지도에 이름이 없으면 이름 파일의 이름을 쓴다"
+        assert not any(x.endswith("create-open") for x in data["problems"]), "지도에 이름·설명이 다 있으면 문제가 없다"
         status = {s["id"]: s["status"] for f in data["features"] for s in f["subs"]}
         assert status["create-open"] == "auto", "실행 파일이 ID 를 가리키면 자동 검증"
         assert status["create-save"] == "method", "Driving 글머리에 ID 가 있으면 방법만"
@@ -272,11 +366,38 @@ def self_test():
         assert "근거를 못 찾음 create-cancel: tests/missing.py::test_x" in data["problems"], "짚은 시험 파일이 없으면 잡는다"
         named_proof = next(s for f in data["features"] for s in f["subs"] if s["id"] == "create-cancel")["proofs"][0]
         assert named_proof["path"] == "tests/test_notes.py" and named_proof["line"] == 1, "근거는 그 시험이 정의된 줄"
-        assert [s["mapped_in"] for s in data["surfaces"]] == [["create-note"], [], [], []], "진입점은 기능 파일 글에 낱말째 있어야 맞는다(Disc 는 Discard 에, 짧은 키 to 는 백틱 없는 to 에 걸리지 않는다)"
+        assert data["mece"] == [] and data["summary"]["mece"] and data["summary"]["nodes_checked"] == 6, f"원천 3 = 잎 3 이고 층마다 합이 맞으면 MECE: {data['mece']}"
+        assert data["tree"]["count"] == 3 and [k["count"] for k in data["tree"]["kids"]] == [2, 1], "뿌리 → 원천 길 → 잎 나무, 가지마다 잎 수"
+        assert next(e for e in data["entries"] if e["id"] == "newNote")["via"] == ["create-open"], "잎은 그 키를 적은 하위 기능의 검증 상태를 받는다"
+        def check(entries, sources=None):
+            json.dump(dict(spec, entries=entries, **({"sources": sources} if sources is not None else {})), open(surf, "w"), ensure_ascii=False)
+            return build(feat, t, surf, names)["mece"]
+        assert check(good[:2]) == ["누락 keys: 코드 3 · 그래프 2 (keys.ts)"], "코드에 있는데 그래프에 없으면 누락(CE)"
+        assert "초과 keys: 코드 3 · 그래프 4 (keys.ts)" in check(good + [dict(good[0])]) and "중복 잎 newNote ×2" in check(good + [dict(good[0])]), "같은 잎이 두 번이면 초과·중복(ME)"
+        assert "같은 자리에 같은 진입점 단축키 / 검색 /: search, slash2" in check(good + [dict(good[1], id="slash2")]), "같은 가지에 같은 키 두 잎이면 겹침(ME)"
+        open(os.path.join(t, "keys.ts"), "a").write('bind("search", "/")\n')
+        assert check(good, [{"name": "keys", "file": "keys.ts", "pattern": r'^bind\("(\w+)"', "distinct": True}]) == [], "같은 진입점을 코드가 두 번 적어도 distinct 원천은 한 번으로 센다"
+        assert check(good) == ["누락 keys: 코드 4 · 그래프 3 (keys.ts)"], "distinct 가 아니면 코드에 적힌 횟수대로 센다"
+        open(os.path.join(t, "keys.ts"), "w").write('bind("newNote", "New note")\nbind("search", "/")\nbind("searchBtn", "Search")\n')
+        assert "길 없는 잎 searchBtn" in check(good[:2] + [dict(good[2], path=[])]), "길 없는 잎은 어느 가지에도 안 들어가 누락(CE)"
+        assert "원천 목록 없음: sources 에 진입점 원천(파일과 세는 정규식)을 적는다" in check(good, []), "원천 수를 대 볼 수 없으면 누락을 못 재니 실패"
         assert data["gaps"] == ["내보내기 메뉴, 설정 화면", "휴지통"], "빈칸 글머리는 이어지는 줄까지 하나로 읽는다"
         assert next(f["id"] for f in data["features"] if f["key"] == "inbox") == "inbox.md", "파일 이름 ID 가 하위 기능 ID 와 겹치면 기능 ID 는 파일 이름(.md 포함)이다"
         page = render(data)
         assert "create-cancel" in page and "__DATA__" not in page, "HTML 에 데이터가 들어간다"
+    kit = os.path.join(here, "..", "..")
+    with tempfile.TemporaryDirectory() as t:
+        blocks = re.findall(r"```markdown\n(# .+?)```", open(os.path.join(kit, "repro-fix", "references", "feature-map.md"), encoding="utf-8").read(), re.S)
+        for i, b in enumerate(blocks):
+            open(os.path.join(t, f"ex{i}.md"), "w").write(b)
+        for folder in (example, t):
+            data = read_map(folder, folder)
+            assert data["features"] and not apply_names(data, {}), f"키트의 기능 지도 예시({folder})는 영어 이름과 한국어 설명을 지도에 담는다: {apply_names(read_map(folder, folder), {})}"
+    vague = re.compile(r"지도에 (든|듦|들었|있는 진입점|없는 진입점)|지도 밖|mapped yet 이 아닌")
+    for f in ("template.html", os.path.join("..", "SKILL.md")):
+        text = open(os.path.join(here, f), encoding="utf-8").read()
+        hit = vague.search(text.replace("「지도에 든」", ""))
+        assert not hit, f"{f} 에 애매한 낱말 「{hit and hit.group(0)}」. 낱말 표의 말(주인 있음·주인 없음·제외·README 빈칸)을 쓴다"
     print("featuremap self-test OK")
     return 0
 
@@ -295,19 +416,15 @@ def main(argv):
     if not a.features:
         ap.error("기능 지도 폴더를 준다")
     data = build(a.features, a.repo, a.surfaces, a.names)
-    if a.out:
-        open(a.out, "w", encoding="utf-8").write(render(data))
     s = data["summary"]
     print(json.dumps(s, ensure_ascii=False))
-    for line in data["problems"]:
+    for line in data["mece"] + data["problems"]:
         print(line)
-    for f in data["features"]:
-        for sub in f["subs"]:
-            if sub["status"] == "none":
-                print(f"방법 없음 {f['key']} {sub['id']}")
-    for sf in data["surfaces"]:
-        if not sf["mapped_in"]:
-            print(f"지도에 없는 진입점 {sf.get('group', '')} {sf.get('label', sf.get('id'))} {sf.get('where', '')}".rstrip())
+    if data["mece"]:
+        print(f"MECE 아님: 그래프를 그리지 않았다. 진입점을 뽑는 스크립트를 고치고 다시 그린다(지도 파일은 고치지 않는다)")
+        return 1
+    if a.out:
+        open(a.out, "w", encoding="utf-8").write(render(data))
     return 0
 
 

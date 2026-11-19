@@ -43,5 +43,5 @@
 
 ## 기능
 
-- [노트 만들기](./create-note.md): 브라우저와 CLI 로 만들기, 취소, 저장 유지, 정리.
-- [노트 찾기](./search.md): 도구 막대·키보드·CLI 검색, 맞는 결과, 빈 결과, 지우기 상태.
+- [Create a note](./create-note.md): 브라우저와 CLI 로 만들기, 취소, 저장 유지, 정리.
+- [Search notes](./search.md): 도구 막대·키보드·CLI 검색, 맞는 결과, 빈 결과, 지우기 상태.

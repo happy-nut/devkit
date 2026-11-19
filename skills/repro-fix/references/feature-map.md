@@ -27,15 +27,15 @@
 ### 로그인
 
 ```markdown
-# 로그인
+# Sign in
 
 사용자가 할 일 앱에 들어간다.
 
 ## Sub-features
 
-- SI1 기본, focus-visible
-- SI2 제출 중, disabled, loading
-- SI3 error
+- `SI1` **default**: 기본, focus-visible 상태.
+- `SI2` **submitting**: 제출 중, disabled, loading 상태.
+- `SI3` **sign-in error**: error 상태.
 
 ## How to get to it (user POV)
 
@@ -59,14 +59,14 @@ Preconditions: 버려도 되는 계정, 인증 서비스가 떠 있음. 플래�
 ### 할 일 목록과 상세
 
 ```markdown
-# 할 일 목록과 상세
+# Task list and detail
 
 사용자가 할 일을 훑고 하나를 연다.
 
 ## Sub-features
 
-- IL1 loading, empty, error
-- IL2 selected, open, expanded
+- `IL1` **list states**: loading, empty, error 상태.
+- `IL2` **item selection**: selected, open, expanded 상태.
 
 ## How to get to it (user POV)
 
@@ -89,15 +89,15 @@ Preconditions: 이름 붙은 픽스처 할 일, 읽기 권한, 할 일 서비스
 ### 할 일 편집기
 
 ```markdown
-# 할 일 편집기
+# Task editor
 
 사용자가 할 일을 만들거나 고친다.
 
 ## Sub-features
 
-- IE1 기본, focus-visible, dirty
-- IE2 validating, disabled, saving
-- IE3 error, success
+- `IE1` **editing**: 기본, focus-visible, dirty 상태.
+- `IE2` **saving**: validating, disabled, saving 상태.
+- `IE3` **save result**: error, success 상태.
 
 ## How to get to it (user POV)
 
@@ -121,15 +121,15 @@ Preconditions: 고칠 수 있는 픽스처, 쓰기 권한, 저장 서비스가 �
 ### 설정
 
 ```markdown
-# 설정
+# Settings
 
 사용자가 개인 선호를 바꾼다.
 
 ## Sub-features
 
-- ST1 closed, open, selected
-- ST2 focus-visible, disabled
-- ST3 loading, error
+- `ST1` **tab switching**: closed, open, selected 상태.
+- `ST2` **tab focus**: focus-visible, disabled 상태.
+- `ST3` **tab loading**: loading, error 상태.
 
 ## How to get to it (user POV)
 

@@ -35,6 +35,25 @@ svg.graph{display:block;margin:0 auto;user-select:none}
 .colhead{font:600 11px -apple-system,BlinkMacSystemFont,sans-serif;fill:var(--muted);letter-spacing:.06em}
 .edge{fill:none;stroke:var(--edge);transition:stroke .15s,opacity .15s}
 .edge.uv{stroke-dasharray:3 4;opacity:.55}
+.mece{border-radius:12px;padding:6px 12px;font-weight:700;font-size:13px;align-self:center;background:color-mix(in srgb,var(--auto) 16%,transparent);color:var(--auto)}
+.mece small{display:block;font-weight:500;font-size:11px;color:var(--muted)}
+.tg circle{fill:var(--solid);stroke:var(--line)}
+.tg text{font:600 12px var(--mono);fill:var(--muted)}
+.tg:hover circle{stroke:var(--accent)}
+.root rect.box{fill:var(--ink)}
+.root .t2,.root .t3{fill:var(--bg)}
+@media (prefers-reduced-motion:no-preference){
+  .enter .node{animation:rise .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 18ms)}
+  .enter .edge{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .9s ease-out forwards;animation-delay:calc(160ms + var(--i,0) * 6ms)}
+  .enter .edge.uv,.enter   .edge.hot{stroke-dasharray:7 5!important;animation:flow .8s linear infinite!important}
+  .node{transition:opacity .2s,transform .2s,filter .2s}
+  .node:hover rect.box{stroke:var(--accent)}
+  .drawer{transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+}
+@keyframes rise{from{opacity:0;translate:-10px 0}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes drawdash{from{opacity:0}}
+@keyframes flow{to{stroke-dashoffset:-24}}
 .node{cursor:pointer;transition:opacity .15s}
 .node rect.box{fill:var(--solid);stroke:var(--line)}
 .node .t1{font:600 12px var(--mono);fill:var(--ink)}
@@ -84,10 +103,10 @@ rect.ring,circle.ring{stroke:var(--accent);stroke-width:2.5;fill:none}
 .box h4{margin:0 0 8px;font-size:12.5px;color:var(--muted);font-weight:600}
 .proof{font-size:12px;margin:4px 0;word-break:break-all}
 .proof code,.drawer code{font:11.5px var(--mono);background:var(--code);padding:1px 4px;border-radius:4px}
-.mini{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line);cursor:pointer}
+.mini{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line);cursor:pointer}
 .mini:first-child{border-top:0}
 .mini b{font:600 12px var(--mono);white-space:nowrap}
-.mini span{color:var(--muted);font-size:12.5px}
+.mini span:not(.dot){color:var(--muted);font-size:12.5px;flex:1 1 180px;min-width:0;word-break:break-word}
 details summary{cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600}
 details .orig{font-size:12.5px;color:var(--muted)}
 details .orig pre{background:var(--code);padding:8px;border-radius:8px;overflow:auto}
@@ -121,144 +140,127 @@ td.nm{font:12.5px var(--mono);white-space:nowrap}
 <div id="view"></div>
 <script>
 const D = __DATA__;
-const ST = {auto: "자동 검증", method: "방법만", none: "없음"};
-const WHY = {auto: "실행 파일이나 실행 명령 줄이 이 ID 를 가리킨다.", method: "Driving 절에 손으로 모는 방법만 있다. 돌릴 스크립트는 없다.", none: "검증 방법이 어디에도 없다."};
+const ST = {auto: "자동 검증", method: "방법만", none: "검증 없음"};
+const WHY = {auto: "이 키를 적은 하위 기능을 스크립트·시험이 돌린다.", method: "이 키를 적은 하위 기능에 손으로 모는 방법만 있다.", none: "이 키를 적은 하위 기능이 없거나, 있어도 검증 방법이 없다."};
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const S = D.summary, pct = (a, b) => b ? Math.round(a * 100 / b) : 0;
-const unmapped = D.surfaces.filter(s => !s.mapped_in.length);
-const surfacesOf = key => D.surfaces.filter(s => s.mapped_in.includes(key));
+const E = Object.fromEntries(D.entries.map(e => [e.id, e]));
+const SUBS = Object.fromEntries(D.features.flatMap(f => f.subs.map(s => [s.id, {s, f}])));
 const count = subs => ({auto: subs.filter(s => s.status === "auto").length, method: subs.filter(s => s.status === "method").length, none: subs.filter(s => s.status === "none").length});
 const bar = c => { const t = (c.auto + c.method + c.none) || 1; return `<div class="bar">${["auto", "method", "none"].map(k => `<i style="width:${c[k] * 100 / t}%;background:var(--${k})"></i>`).join("")}</div>`; };
-const state = {tab: "graph", zoom: null, sel: null, status: new Set(["auto", "method", "none"]), q: "", onlyMiss: false};
+const state = {tab: "graph", zoom: null, sel: null, status: new Set(["auto", "method", "none"]), q: "", collapsed: new Set()};
+const keyOf = n => n.path.join(" / ") || "·";
+const NODES = {};
+(function index(n) { n.key = keyOf(n); NODES["n:" + n.key] = n; n.all = [...n.leaves, ...n.kids.flatMap(k => index(k))]; return n.all; })(D.tree);
+const leafStates = ids => count(ids.map(i => E[i]));
+if (D.entries.length > 40) Object.values(NODES).forEach(n => { if (n !== D.tree && n.leaves.length) state.collapsed.add(n.key); });
 
 document.getElementById("title").textContent = D.title;
-document.getElementById("meta").textContent = `${D.repo} · ${D.generated} · 기능 ${S.features} · 하위 기능 ${S.subs}`;
+document.getElementById("meta").textContent = `${D.repo} · ${D.generated} · 진입점 ${S.entries} · 하위 기능 ${S.subs}`;
+const srcText = Object.entries(S.sources).map(([k, v]) => `${k} ${v}`).join(" + ");
 document.getElementById("stats").innerHTML = [
-  [`${pct(S.auto, S.subs)}%`, `<i style="background:var(--auto)"></i>자동 검증 ${S.auto}/${S.subs}`],
-  [`${pct(S.auto + S.method, S.subs)}%`, `<i style="background:var(--method)"></i>검증 방법 있음 ${S.auto + S.method}/${S.subs}`],
-  [S.surfaces ? `${pct(S.mapped, S.surfaces)}%` : "–", S.surfaces ? `지도에 든 진입점 ${S.mapped}/${S.surfaces}` : "진입점 목록 없음"],
-].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+  [`${pct(S.entries_auto, S.entries)}%`, `<i style="background:var(--auto)"></i>자동 검증된 끝점 ${S.entries_auto}/${S.entries}`],
+  [`${pct(S.auto, S.subs)}%`, `자동 검증된 하위 기능 ${S.auto}/${S.subs}`],
+].map(([b, t]) => `<div class="stat"><b>${b}</b><span>${t}</span></div>`).join("") + `<div class="mece" title="그릴 때마다 모든 가지에서 자식 합 = 부모, 잎 중복 0, 원천 개수 = 잎 개수를 확인했다">MECE ✓ <small>가지 ${S.nodes_checked} · 잎 ${S.entries} = 코드 ${srcText}</small></div>`;
 
-const TABS = [["graph", "그래프"], ["list", "목록"], ["surfaces", `진입점 ${S.surfaces ? S.mapped + "/" + S.surfaces : ""}`], ["gaps", `지도에 없음 ${S.gaps}`]];
+const TABS = [["graph", "그래프"], ["list", `하위 기능 ${S.subs}`], ["gaps", `README 빈칸 ${S.gaps}`]];
 const tabsEl = document.getElementById("tabs");
 tabsEl.onclick = e => { const k = e.target.dataset.tab; if (k) { state.tab = k; render(); } };
 
-const NODES = {};
-D.features.forEach(f => { NODES[f.id] = {kind: "feature", f}; f.subs.forEach(s => NODES[s.id] = {kind: "sub", s, f}); });
-NODES.__unmapped = {kind: "unmapped"};
-
-function matches(s) {
-  if (!state.status.has(s.status)) return false;
+function leafMatch(e) {
+  if (!state.status.has(e.status)) return false;
   const q = state.q.trim().toLowerCase();
-  return !q || `${s.id} ${s.name} ${s.desc}`.toLowerCase().includes(q);
+  return !q || `${e.id} ${e.label || ""} ${(e.match || []).join(" ")} ${e.path.join(" ")}`.toLowerCase().includes(q);
 }
-
-const GROUPS = [...new Set(D.surfaces.map(s => s.group || "기타"))].map((g, i) => ({id: "g:" + i, name: g, items: D.surfaces.filter(s => (s.group || "기타") === g)}));
-GROUPS.forEach(g => NODES[g.id] = {kind: "group", g});
-const verified = {sub: s => s.status === "auto", feature: f => f.subs.some(s => s.status === "auto"), group: g => g.items.some(s => s.mapped_in.some(k => verified.feature(D.features.find(f => f.key === k))))};
-const cut = (t, n) => t.length > n ? t.slice(0, n - 1) + "…" : t;
 
 function layout() {
-  const narrow = innerWidth <= 760, ROW = narrow ? 28 : 30, GW = narrow ? 96 : 178, FW = narrow ? 112 : 190, GAP = narrow ? 24 : 170;
-  const gx = 12, fx = gx + GW + GAP, sx = fx + FW + GAP * 0.8, W = sx + (narrow ? 118 : 330), top = 36;
-  const pos = {};
+  const narrow = innerWidth <= 760, ROW = narrow ? 26 : 28, NW = narrow ? 104 : 168, GAP = narrow ? 18 : 64;
+  const depth = (function d(n) { return n.kids.length ? 1 + Math.max(...n.kids.map(d)) : 0; })(D.tree);
+  const colX = d => 12 + d * (NW + GAP), leafX = colX(depth + 1) - GAP + 14, top = 30;
+  const pos = {}, BOX = 54;
   let y = top;
-  const cols = [...D.features.map(f => ({id: f.id, n: Math.max(f.subs.length, 1), subs: f.subs}))];
-  if (unmapped.length) cols.push({id: "__unmapped", n: 2, subs: []});
-  cols.forEach(c => {
-    c.subs.forEach((s, i) => pos[s.id] = {x: sx, y: y + ROW * (i + 0.5)});
-    pos[c.id] = {x: fx, y: y + ROW * c.n / 2};
-    y += ROW * (c.n + 0.7);
-  });
-  const want = g => { const ids = g.items.flatMap(s => s.mapped_in.map(k => D.features.find(f => f.key === k).id)); const use = ids.length ? ids : unmapped.length ? ["__unmapped"] : []; return use.length ? use.reduce((a, id) => a + pos[id].y, 0) / use.length : top; };
-  const order = GROUPS.map(g => [g, want(g)]).sort((a, b) => a[1] - b[1]);
-  const ys = [];
-  order.forEach(([, w], i) => ys.push(Math.max(i ? ys[i - 1] + 54 : top + 21, w)));
-  const mean = a => a.reduce((x, v) => x + v, 0) / (a.length || 1);
-  const shift = Math.max(mean(order.map(o => o[1])) - mean(ys), top + 21 - (ys[0] ?? 0));
-  order.forEach(([g], i) => pos[g.id] = {x: gx, y: ys[i] + shift});
-  const H = Math.max(y, (ys.at(-1) ?? 0) + shift + 30) + 20;
-  return {pos, W, H, GW, FW, narrow, sx};
+  (function place(n, d) {
+    const id = "n:" + n.key, ys = [];
+    if (!state.collapsed.has(n.key) || n === D.tree) {
+      n.kids.forEach(k => ys.push(place(k, d + 1)));
+      n.leaves.forEach(l => { pos[l] = {x: leafX, y: y + ROW / 2}; ys.push(y + ROW / 2); y += ROW; });
+    }
+    if (!ys.length) { ys.push(y + BOX / 2); y += BOX; }
+    pos[id] = {x: colX(d), y: (ys[0] + ys[ys.length - 1]) / 2};
+    return pos[id].y;
+  })(D.tree, 0);
+  const W = leafX + (narrow ? 150 : 330), H = y + 30;
+  return {pos, W, H, NW, narrow, leafX, colX, depth};
 }
 
+const cut = (t, n) => String(t).length > n ? String(t).slice(0, n - 1) + "…" : String(t);
 function graphView() {
-  const {pos, W, H, GW, FW, narrow, sx} = layout();
-  if (state.zoom === null) state.zoom = Math.min(1, (innerWidth - 8) / W);
+  const {pos, W, H, NW, narrow, leafX} = layout();
+  if (state.zoom === null) state.zoom = innerWidth > 0 ? Math.max(0.4, Math.min(1, (innerWidth - 8) / W)) : 1;
   const link = (x1, y1, x2, y2) => { const m = (x1 + x2) / 2; return `M${x1},${y1}C${m},${y1} ${m},${y2} ${x2},${y2}`; };
   let edges = "", nodes = "";
-  GROUPS.forEach(g => {
-    const to = {};
-    g.items.forEach(s => s.mapped_in.forEach(k => to[k] = (to[k] || 0) + 1));
-    const miss = g.items.filter(s => !s.mapped_in.length).length;
-    Object.entries(to).forEach(([k, n]) => { const f = D.features.find(x => x.key === k); edges += `<path class="edge ${verified.feature(f) ? "" : "uv"}" data-for="${g.id} ${esc(f.id)}" stroke-width="${1 + Math.log2(1 + n)}" d="${link(pos[g.id].x + GW, pos[g.id].y, pos[f.id].x, pos[f.id].y)}"/>`; });
-    if (miss && unmapped.length) edges += `<path class="edge uv" data-for="${g.id} __unmapped" stroke-width="${1 + Math.log2(1 + miss)}" d="${link(pos[g.id].x + GW, pos[g.id].y, pos.__unmapped.x, pos.__unmapped.y)}"/>`;
+  (function draw(n) {
+    const id = "n:" + n.key, p = pos[id], open = !state.collapsed.has(n.key) || n === D.tree, c = leafStates(n.all), auto = c.auto;
+    if (open) {
+      n.kids.forEach(k => { const q = pos["n:" + k.key]; edges += `<path class="edge ${leafStates(k.all).auto ? "" : "uv"}" data-for="${esc(id)} ${esc("n:" + k.key)}" stroke-width="${1 + Math.log2(1 + k.all.length) * 0.7}" d="${link(p.x + NW, p.y, q.x, q.y)}"/>`; draw(k); });
+      n.leaves.forEach(l => { const q = pos[l]; edges += `<path class="edge ${E[l].status === "auto" ? "" : "uv"}" data-for="${esc(id)} ${esc(l)}" stroke-width="1.2" d="${link(p.x + NW, p.y, q.x - 8, q.y)}"/>`; });
+    }
+    let segs = "", bx = 0;
+    ["auto", "method", "none"].forEach(k => { const w = NW * c[k] / Math.max(n.all.length, 1); if (w) segs += `<rect x="${bx}" y="38" width="${w}" height="4" fill="var(--${k})"/>`; bx += w; });
+    const toggle = n.kids.length || n.leaves.length ? `<g class="tg" data-toggle="${esc(n.key)}"><circle cx="${NW}" cy="21" r="8"/><text x="${NW}" y="21" dy=".35em" text-anchor="middle">${open ? "−" : "+"}</text></g>` : "";
+    nodes += `<g class="node inner ${n === D.tree ? "root" : ""} ${auto ? "" : "uvn"}" data-id="${esc(id)}" transform="translate(${p.x},${p.y - 21})"><rect class="ring" x="-4" y="-4" width="${NW + 8}" height="50" rx="12" style="display:none"/><rect class="box" width="${NW}" height="42" rx="9"/><text class="t2" x="10" y="17">${esc(cut(n.name, narrow ? 12 : 21))}</text><text class="t3" x="10" y="32">${n.all.length} · 자동 ${auto}</text><clipPath id="c${esc(id).replace(/[^\w]/g, "_")}"><rect width="${NW}" height="42" rx="9"/></clipPath><g clip-path="url(#c${esc(id).replace(/[^\w]/g, "_")})">${segs}</g>${n === D.tree ? "" : toggle}</g>`;
+  })(D.tree);
+  D.entries.forEach(e => {
+    const p = pos[e.id]; if (!p) return;
+    const dot = e.status === "auto" ? `<circle r="6" fill="var(--auto)"/>` : e.status === "method" ? `<circle r="5" fill="var(--solid)" stroke="var(--method)" stroke-width="2.5"/>` : `<circle r="5" fill="none" stroke="var(--none)" stroke-width="1.6" stroke-dasharray="2 2"/>`;
+    const key = (e.match || [])[0] || "";
+    nodes += `<g class="node leaf ${e.status === "auto" ? "" : "uvn"}" data-id="${esc(e.id)}" transform="translate(${p.x},${p.y})"><circle class="ring" r="10" style="display:none"/>${dot}<text x="12" dy=".35em">${esc(cut(e.id, narrow ? 15 : 26))} <tspan class="n">${esc(cut(key, narrow ? 6 : 14))}</tspan></text></g>`;
   });
-  D.features.forEach(f => f.subs.forEach(s => edges += `<path class="edge ${verified.sub(s) ? "" : "uv"}" data-for="${esc(f.id)} ${esc(s.id)}" stroke-width="1.3" d="${link(pos[f.id].x + FW, pos[f.id].y, pos[s.id].x - 7, pos[s.id].y)}"/>`));
-  GROUPS.forEach(g => {
-    const {x, y} = pos[g.id], m = g.items.filter(s => s.mapped_in.length).length, w = GW;
-    nodes += `<g class="node grp ${verified.group(g) ? "" : "uvn"}" data-id="${g.id}" transform="translate(${x},${y - 21})"><rect class="ring" x="-4" y="-4" width="${w + 8}" height="50" rx="12" style="display:none"/><rect class="box" width="${w}" height="42" rx="9"/><text class="t2" x="10" y="17">${esc(cut(g.name, narrow ? 11 : 24))}</text><text class="t3" x="10" y="33">${narrow ? `${m}/${g.items.length}` : `진입점 ${g.items.length} · 지도에 ${m}`}</text><rect x="0" y="40" width="${w * m / g.items.length}" height="2" fill="var(--accent)"/></g>`;
-  });
-  D.features.forEach(f => {
-    const {x, y} = pos[f.id], c = count(f.subs), t = Math.max(f.subs.length, 1);
-    let bx = 0, segs = "";
-    ["auto", "method", "none"].forEach(k => { const w = FW * c[k] / t; if (w) segs += `<rect x="${bx}" y="44" width="${w}" height="4" fill="var(--${k})"/>`; bx += w; });
-    nodes += `<g class="node feature ${verified.feature(f) ? "" : "uvn"}" data-id="${esc(f.id)}" transform="translate(${x},${y - 24})"><rect class="ring" x="-4" y="-4" width="${FW + 8}" height="56" rx="12" style="display:none"/><rect class="box" width="${FW}" height="48" rx="9"/><text class="t1" x="10" y="17">${esc(f.id)}</text><text class="t2" x="10" y="34">${esc(cut(f.name, narrow ? 12 : 21))}</text><text class="t3" x="${FW - 10}" y="17" text-anchor="end">${c.auto}/${f.subs.length}</text><clipPath id="c-${esc(f.id)}"><rect width="${FW}" height="48" rx="9"/></clipPath><g clip-path="url(#c-${esc(f.id)})">${segs}</g></g>`;
-  });
-  if (unmapped.length) {
-    const {x, y} = pos.__unmapped;
-    nodes += `<g class="node feature uvn" data-id="__unmapped" transform="translate(${x},${y - 24})"><rect class="ring" x="-4" y="-4" width="${FW + 8}" height="56" rx="12" style="display:none"/><rect class="box" width="${FW}" height="48" rx="9"/><text class="t1" x="10" y="17">Unmapped</text><text class="t3" x="10" y="34">지도 밖 진입점 ${unmapped.length}</text></g>`;
-  }
-  D.features.forEach(f => f.subs.forEach(s => {
-    const {x, y} = pos[s.id], dot = s.status === "auto" ? `<circle r="6.5" fill="var(--auto)"/>` : s.status === "method" ? `<circle r="5.5" fill="var(--solid)" stroke="var(--method)" stroke-width="2.5"/>` : `<circle r="5.5" fill="none" stroke="var(--none)" stroke-width="1.6" stroke-dasharray="2 2"/>`;
-    nodes += `<g class="node leaf ${verified.sub(s) ? "" : "uvn"}" data-id="${esc(s.id)}" transform="translate(${x},${y})"><circle class="ring" r="11" style="display:none"/>${dot}<text x="13" dy=".35em">${esc(s.id)} <tspan class="n">${esc(cut(s.name, narrow ? 7 : 34))}</tspan></text></g>`;
-  }));
-  const heads = `<text class="colhead" x="12" y="14">진입점</text><text class="colhead" x="${pos[D.features[0]?.id]?.x ?? 0}" y="14">기능</text><text class="colhead" x="${sx - 6}" y="14">끝점 · 하위 기능</text>`;
-  const chips = ["auto", "method", "none"].map(k => `<button class="chip ${state.status.has(k) ? "" : "off"}" data-st="${k}" title="${WHY[k]}"><span class="dot" style="background:var(--${k})"></span>${ST[k]} ${S[k]}</button>`).join("");
+  const chips = ["auto", "method", "none"].map(k => `<button class="chip ${state.status.has(k) ? "" : "off"}" data-st="${k}" title="${WHY[k]}"><span class="dot" style="background:var(--${k})"></span>${ST[k]} ${D.entries.filter(e => e.status === k).length}</button>`).join("");
   return `<div class="stage">
-    <div class="canvas" id="canvas"><svg class="graph" id="svg" viewBox="0 0 ${W} ${H}" width="${W * state.zoom}" height="${H * state.zoom}" data-w="${W}" data-h="${H}"><g id="world">${heads}${edges}${nodes}</g></svg></div>
-    <div class="toolbar"><input class="search" id="q" type="search" placeholder="ID·영어 이름·설명으로 찾기" value="${esc(state.q)}">${chips}</div>
-    <div class="legend"><div class="uvkey"><span class="dot" style="background:var(--faint);opacity:.6"></span>흐린 것 = 자동 검증 없음 (눌러 볼 수 있음)</div><div><span class="dot" style="background:var(--auto)"></span>자동 검증: 스크립트·시험이 돌린다</div><div><span class="dot" style="border:2.5px solid var(--method);box-sizing:border-box"></span>방법만: 손으로 모는 방법만 있다</div><div><span class="dot" style="border:1.6px dashed var(--none);box-sizing:border-box"></span>없음: 검증 방법이 없다</div></div>
+    <div class="canvas" id="canvas"><svg class="graph" id="svg" viewBox="0 0 ${W} ${H}" width="${W * state.zoom}" height="${H * state.zoom}" data-w="${W}" data-h="${H}"><g id="world"><text class="colhead" x="12" y="14">진입점 원천 → 화면·범위</text><text class="colhead" x="${leafX - 8}" y="14">끝점</text>${edges}${nodes}</g></svg></div>
+    <div class="toolbar"><input class="search" id="q" type="search" placeholder="진입점 이름·키·범위로 찾기" value="${esc(state.q)}">${chips}</div>
+    <div class="legend"><div class="uvkey"><span class="dot" style="background:var(--faint);opacity:.6"></span>흐린 것 = 자동 검증 없음 (눌러 볼 수 있음)</div><div><span class="dot" style="background:var(--auto)"></span>자동 검증</div><div><span class="dot" style="border:2.5px solid var(--method);box-sizing:border-box"></span>방법만</div><div><span class="dot" style="border:1.6px dashed var(--none);box-sizing:border-box"></span>검증 없음</div><div>−/+ 가지 접기</div></div>
     <div class="zoom"><button data-z="1.2" aria-label="확대">+</button><button data-z="0.83" aria-label="축소">−</button><button data-z="0" aria-label="원래 크기">⤢</button></div>
     <aside class="drawer" id="drawer"></aside>
   </div>`;
 }
 
 function drawerHtml(id) {
-  const n = NODES[id];
-  if (!n) return "";
   const close = `<button class="close" data-close aria-label="닫기">✕</button>`;
   const copy = text => `<button class="copy" data-copy="${esc(text)}">복사</button>`;
-  if (n.kind === "group") {
-    const g = n.g, fname = k => { const f = D.features.find(x => x.key === k); return f ? `${f.id} ${f.name}` : k; };
-    return `${close}<div class="kicker">ENTRY POINTS</div><div class="ename"><code>${esc(g.name)}</code></div><p class="desc">이 묶음의 진입점 ${g.items.length}개 가운데 ${g.items.filter(s => s.mapped_in.length).length}개가 기능 지도에 있다. ${verified.group(g) ? "" : "이 묶음이 닿는 기능에는 자동 검증이 없다."}</p>
-      <div class="box"><h4>진입점</h4>${g.items.map(s => `<div class="proof ${s.mapped_in.length ? "" : "list-uv"}"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")} → ${s.mapped_in.length ? s.mapped_in.map(k => `<a href="#" data-pick="${esc(D.features.find(f => f.key === k).id)}">${esc(fname(k))}</a>`).join(", ") : "지도에 없음"} <span style="color:var(--muted)">${esc(s.where || "")}</span></div>`).join("")}</div>`;
+  const n = NODES[id];
+  if (n) {
+    const c = leafStates(n.all);
+    const parts = [...n.kids.map(k => [`n:${k.key}`, k.name, k.all.length, leafStates(k.all).auto]), ...n.leaves.map(l => [l, l, 1, E[l].status === "auto" ? 1 : 0])];
+    return `${close}<div class="kicker">${n === D.tree ? "ROOT" : "BRANCH"} · ${esc(n.path.slice(0, -1).join(" / ") || D.repo)}</div><div class="ename"><code>${esc(n === D.tree ? n.name : n.key)}</code>${copy(n.key)}</div>
+      ${bar(c)}<div class="why">끝점 ${n.all.length} · 자동 ${c.auto} · 방법만 ${c.method} · 검증 없음 ${c.none}</div>
+      <div class="box"><h4>나눔 · 자식 ${parts.length}개, 합 ${parts.reduce((a, x) => a + x[2], 0)} = ${n.all.length} (겹침 0, 빠짐 0)</h4>${parts.map(([pid, nm, k, a]) => `<div class="mini ${a ? "" : "list-uv"}" data-pick="${esc(pid)}"><b>${esc(nm)}</b><span>${k} · 자동 ${a}</span></div>`).join("")}</div>`;
   }
-  if (n.kind === "unmapped") {
-    return `${close}<div class="kicker">UNMAPPED</div><div class="ename"><code>Unmapped</code></div><p class="desc">코드에는 있는데 기능 지도에 적히지 않은 진입점 ${unmapped.length}개다. 지도에 넣으면 검증 방법을 붙일 수 있다.</p>
-      ${D.gaps.length ? `<div class="box"><h4>지도가 스스로 밝힌 빈칸</h4><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul></div>` : ""}
-      <div class="box"><h4>지도 밖 진입점</h4>${unmapped.slice(0, 200).map(s => `<div class="proof"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")} <span style="color:var(--muted)">${esc(s.where || "")}</span></div>`).join("")}</div>`;
-  }
-  if (n.kind === "feature") {
-    const f = n.f, c = count(f.subs), surf = surfacesOf(f.key);
-    return `${close}<div class="kicker">FEATURE · ${esc(f.file)}</div><div class="ename"><code>${esc(f.id)} ${esc(f.name)}</code>${copy(`${f.id} ${f.name}`)}</div>
-      <p class="desc">${esc(f.desc) || '<span style="color:var(--muted)">한국어 설명이 없다.</span>'}</p>${bar(c)}<div class="why">자동 ${c.auto} · 방법만 ${c.method} · 없음 ${c.none}</div>
-      <div class="box"><h4>하위 기능</h4>${f.subs.map(s => `<div class="mini" data-pick="${esc(s.id)}"><span class="dot" style="background:var(--${s.status})"></span><b>${esc(s.id)}</b><span><span style="font-family:var(--mono);color:var(--ink)">${esc(s.name)}</span> · ${esc(s.desc)}</span></div>`).join("")}</div>
-      ${surf.length ? `<div class="box"><h4>이 기능 파일에 적힌 진입점 ${surf.length}</h4>${surf.map(s => (s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")).join(" · ")}</div>` : ""}
-      <div class="box"><details><summary>원문 (${esc(f.file)})</summary><div class="orig">${f.purpose}${f.sections.map(x => `<h4>${esc(x.name)}</h4>${x.html}`).join("")}</div></details></div>`;
-  }
-  const s = n.s, f = n.f;
-  return `${close}<div class="kicker">SUB-FEATURE · <a href="#" data-pick="${esc(f.id)}">${esc(f.id)} ${esc(f.name)}</a></div><div class="ename"><code>${esc(s.id)} ${esc(s.name)}</code>${copy(`${s.id} ${s.name}`)}</div>
-    <p class="desc">${esc(s.desc) || '<span style="color:var(--muted)">한국어 설명이 없다.</span>'}</p>
-    <span class="pill"><span class="dot" style="background:var(--${s.status})"></span>${ST[s.status]}</span>${s.proofs.some(p => p.named) ? '<span class="pill" style="margin-left:6px">이름 파일이 짚은 시험</span>' : ""}<div class="why">${WHY[s.status]}</div>
-    ${s.proofs.length ? `<div class="box"><h4>근거</h4>${s.proofs.map(p => `<div class="proof"><code>${esc(p.path)}:${p.line}</code> ${esc(p.text)}</div>`).join("")}</div>` : ""}
-    <div class="box"><details><summary>원문</summary><div class="orig">${s.html}</div></details></div>`;
+  const e = E[id]; if (!e) return "";
+  const via = e.via.map(v => SUBS[v]).filter(Boolean);
+  return `${close}<div class="kicker">ENTRY POINT · ${esc(e.path.join(" / "))}</div><div class="ename"><code>${esc(e.id)}</code>${copy(e.id)}</div>
+    ${e.label ? `<p class="desc">${esc(e.label)}</p>` : ""}<div class="proof">${(e.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")} · ${esc(e.source)} · <code>${esc(e.where || "")}</code></div>
+    <div style="margin-top:10px"><span class="pill"><span class="dot" style="background:var(--${e.status})"></span>${ST[e.status]}</span></div><div class="why">${WHY[e.status]}</div>
+    ${via.length ? `<div class="box"><h4>이 키를 적은 하위 기능</h4>${via.map(({s, f}) => `<div class="mini ${s.status === "auto" ? "" : "list-uv"}"><span class="dot" style="background:var(--${s.status})"></span><b>${esc(s.id)} ${esc(s.name)}</b><span>${esc(s.desc)}${s.proofs.length ? ` · <code>${esc(s.proofs[0].path)}:${s.proofs[0].line}</code>` : ""}</span></div>`).join("")}</div>` : ""}`;
 }
 
 let centerOn = () => {};
 function setupGraph() {
   const svg = document.getElementById("svg"), canvas = document.getElementById("canvas"), drawer = document.getElementById("drawer");
-  const zoomTo = z => { const cx = (canvas.scrollLeft + canvas.clientWidth / 2) / state.zoom, cy = (canvas.scrollTop + canvas.clientHeight / 2) / state.zoom; state.zoom = Math.min(2.5, Math.max(0.4, z)); svg.setAttribute("width", svg.dataset.w * state.zoom); svg.setAttribute("height", svg.dataset.h * state.zoom); canvas.scrollLeft = cx * state.zoom - canvas.clientWidth / 2; canvas.scrollTop = cy * state.zoom - canvas.clientHeight / 2; };
-  svg.addEventListener("click", e => { const g = e.target.closest(".node"); select(g ? g.dataset.id : null); });
+  if (!state.introDone) {
+    state.introDone = true;
+    svg.querySelectorAll(".node").forEach((n, i) => n.style.setProperty("--i", Math.round(+(n.getAttribute("transform").match(/[\d.]+/)?.[0] || 0) / 60) + (i % 10)));
+    svg.querySelectorAll(".edge").forEach((e, i) => { e.setAttribute("pathLength", "1"); e.style.setProperty("--i", i % 40); });
+    svg.classList.add("enter");
+    setTimeout(() => { svg.classList.remove("enter"); svg.querySelectorAll(".edge").forEach(e => e.removeAttribute("pathLength")); }, 1900);
+  }
+  const zoomTo = z => { const cx = (canvas.scrollLeft + canvas.clientWidth / 2) / state.zoom, cy = (canvas.scrollTop + canvas.clientHeight / 2) / state.zoom; state.zoom = Math.min(2.5, Math.max(0.3, z)); svg.setAttribute("width", svg.dataset.w * state.zoom); svg.setAttribute("height", svg.dataset.h * state.zoom); canvas.scrollLeft = cx * state.zoom - canvas.clientWidth / 2; canvas.scrollTop = cy * state.zoom - canvas.clientHeight / 2; };
+  svg.addEventListener("click", e => {
+    const t = e.target.closest("[data-toggle]");
+    if (t) { const k = t.dataset.toggle, top = canvas.scrollTop; state.collapsed.has(k) ? state.collapsed.delete(k) : state.collapsed.add(k); render(); document.getElementById("canvas").scrollTop = top; return; }
+    const g = e.target.closest(".node"); select(g ? g.dataset.id : null);
+  });
   svg.addEventListener("mouseover", e => { const g = e.target.closest(".node"); if (g && !state.sel) focus(g.dataset.id); });
   svg.addEventListener("mouseout", e => { if (e.target.closest(".node") && !state.sel) focus(null); });
   centerOn = g => {
@@ -278,13 +280,11 @@ function setupGraph() {
   if (state.sel) select(state.sel);
 }
 
-function groupsTo(fid) { const f = D.features.find(x => x.id === fid); return GROUPS.filter(g => g.items.some(s => fid === "__unmapped" ? !s.mapped_in.length : f && s.mapped_in.includes(f.key))).map(g => g.id); }
 function related(id) {
-  const n = NODES[id], ids = new Set([id]);
-  if (n?.kind === "feature") { n.f.subs.forEach(s => ids.add(s.id)); groupsTo(n.f.id).forEach(g => ids.add(g)); }
-  if (n?.kind === "sub") { ids.add(n.f.id); groupsTo(n.f.id).forEach(g => ids.add(g)); }
-  if (n?.kind === "unmapped") groupsTo("__unmapped").forEach(g => ids.add(g));
-  if (n?.kind === "group") n.g.items.forEach(s => s.mapped_in.length ? s.mapped_in.forEach(k => ids.add(D.features.find(f => f.key === k).id)) : ids.add("__unmapped"));
+  const ids = new Set([id]), n = NODES[id];
+  const up = path => { for (let i = 0; i <= path.length; i++) ids.add("n:" + (path.slice(0, i).join(" / ") || "·")); };
+  if (n) { up(n.path); (function down(m) { m.kids.forEach(k => { ids.add("n:" + k.key); down(k); }); m.leaves.forEach(l => ids.add(l)); })(n); }
+  else if (E[id]) up(E[id].path);
   return ids;
 }
 
@@ -297,10 +297,8 @@ function focus(id) {
 
 function filter() {
   if (state.sel) return;
-  const q = state.q.trim().toLowerCase();
-  document.querySelectorAll("#world .leaf").forEach(g => g.classList.toggle("dim", !matches(NODES[g.dataset.id].s)));
-  document.querySelectorAll("#world .feature").forEach(g => { const n = NODES[g.dataset.id]; g.classList.toggle("dim", !!q && n.kind === "feature" && !n.f.subs.some(matches) && !`${n.f.id} ${n.f.name} ${n.f.desc}`.toLowerCase().includes(q)); });
-  document.querySelectorAll("#world .grp").forEach(g => g.classList.toggle("dim", !!q && !JSON.stringify(NODES[g.dataset.id].g).toLowerCase().includes(q)));
+  document.querySelectorAll("#world .leaf").forEach(g => g.classList.toggle("dim", !leafMatch(E[g.dataset.id])));
+  document.querySelectorAll("#world .inner").forEach(g => g.classList.toggle("dim", !NODES[g.dataset.id].all.some(l => leafMatch(E[l]))));
   document.querySelectorAll("#world .edge").forEach(p => p.classList.remove("hot", "dim"));
 }
 
@@ -318,42 +316,31 @@ function select(id) {
 
 function listView() {
   const chips = ["auto", "method", "none"].map(k => `<button class="chip ${state.status.has(k) ? "" : "off"}" data-st="${k}"><span class="dot" style="background:var(--${k})"></span>${ST[k]} ${S[k]}</button>`).join("");
+  const q = state.q.trim().toLowerCase();
   const body = D.features.map(f => {
-    const rows = f.subs.filter(matches).map(s => `<tr class="${s.status === "auto" ? "" : "list-uv"}"><td><span class="dot" style="background:var(--${s.status});display:inline-block" title="${ST[s.status]}"></span></td><td class="id">${esc(s.id)}</td><td class="nm">${esc(s.name)}</td><td>${esc(s.desc)}${s.proofs.length ? `<div class="proof" style="color:var(--muted)"><code>${esc(s.proofs[0].path)}:${s.proofs[0].line}</code></div>` : ""}</td></tr>`).join("");
+    const rows = f.subs.filter(s => state.status.has(s.status) && (!q || `${s.id} ${s.name} ${s.desc}`.toLowerCase().includes(q))).map(s => `<tr class="${s.status === "auto" ? "" : "list-uv"}"><td><span class="dot" style="background:var(--${s.status});display:inline-block" title="${ST[s.status]}"></span></td><td class="id">${esc(s.id)}</td><td class="nm">${esc(s.name)}</td><td>${esc(s.desc)}${s.proofs.length ? `<div class="proof" style="color:var(--muted)"><code>${esc(s.proofs[0].path)}:${s.proofs[0].line}</code></div>` : ""}</td></tr>`).join("");
     if (!rows) return "";
-    const c = count(f.subs);
-    return `<div class="fh"><b>${esc(f.id)}</b><span>${esc(f.name)}</span><small>${esc(f.desc)}</small></div>${bar(c)}<table>${rows}</table>`;
+    return `<div class="fh"><b>${esc(f.id)}</b><span>${esc(f.name)}</span><small>${esc(f.desc)}</small></div>${bar(count(f.subs))}<table>${rows}</table>`;
   }).join("");
   return `<div class="page"><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="search" id="q" type="search" placeholder="ID·영어 이름·설명으로 찾기" value="${esc(state.q)}">${chips}</div>${body || '<div class="empty">조건에 맞는 하위 기능이 없다.</div>'}</div>`;
 }
 
-function surfacesView() {
-  if (!D.surfaces.length) return `<div class="page empty">진입점 목록(--surfaces)을 주지 않아 지도 커버리지를 재지 않았다.</div>`;
-  const q = state.q.trim().toLowerCase(), groups = {};
-  D.surfaces.filter(s => (!state.onlyMiss || !s.mapped_in.length) && (!q || JSON.stringify(s).toLowerCase().includes(q))).forEach(s => (groups[s.group || "기타"] ??= []).push(s));
-  const all = g => D.surfaces.filter(s => (s.group || "기타") === g);
-  const fname = k => { const f = D.features.find(x => x.key === k); return f ? `${f.id} ${f.name}` : k; };
-  const body = Object.entries(groups).map(([g, items]) => `<div class="group">${esc(g)} · 지도에 듦 ${all(g).filter(s => s.mapped_in.length).length}/${all(g).length}</div><div class="surf">${items.map(s => `<div class="s ${s.mapped_in.length ? "" : "miss"}"><b>${esc(s.label || s.id)}</b> ${(s.match || []).map(m => `<code>${esc(m)}</code>`).join(" ")}<div>${s.mapped_in.length ? s.mapped_in.map(fname).map(esc).join(", ") : "지도에 없음"}${s.where ? ` · <code>${esc(s.where)}</code>` : ""}</div></div>`).join("")}</div>`).join("");
-  return `<div class="page"><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="search" id="q" type="search" placeholder="진입점 찾기" value="${esc(state.q)}"><button class="chip ${state.onlyMiss ? "on" : ""}" id="miss"><span class="dot" style="background:var(--none)"></span>지도에 없는 것만 ${S.surfaces - S.mapped}</button></div>${body || '<div class="empty">조건에 맞는 진입점이 없다.</div>'}</div>`;
-}
-
 function gapsView() {
-  return `<div class="page">${D.gaps.length ? `<h3>지도가 스스로 밝힌 빈칸</h3><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul>` : `<div class="empty">README 에 「Not mapped yet」 절이 없다.</div>`}</div>`;
+  return `<div class="page">${D.gaps.length ? `<h3>README 가 적어 둔 빈칸</h3><ul>${D.gaps.map(g => `<li>${g}</li>`).join("")}</ul>` : `<div class="empty">README 에 「Not mapped yet」 절이 없다.</div>`}</div>`;
 }
 
 function render() {
   tabsEl.innerHTML = TABS.map(([k, l]) => `<button class="${state.tab === k ? "on" : ""}" data-tab="${k}">${l}</button>`).join("");
   const v = document.getElementById("view");
-  v.innerHTML = state.tab === "graph" ? graphView() : state.tab === "list" ? listView() : state.tab === "surfaces" ? surfacesView() : gapsView();
+  v.innerHTML = state.tab === "graph" ? graphView() : state.tab === "list" ? listView() : gapsView();
   if (state.tab === "graph") setupGraph();
   const q = document.getElementById("q");
   if (q) q.oninput = e => { state.q = e.target.value; if (state.tab === "graph") { select(null); filter(); } else { const pos = e.target.selectionStart; render(); const n = document.getElementById("q"); n.focus(); n.setSelectionRange(pos, pos); } };
 }
 
 document.getElementById("view").addEventListener("click", e => {
-  const st = e.target.closest("[data-st]"), miss = e.target.closest("#miss");
+  const st = e.target.closest("[data-st]");
   if (st) { const k = st.dataset.st; state.status.has(k) ? state.status.delete(k) : state.status.add(k); if (state.tab === "graph") { st.classList.toggle("off"); select(null); filter(); } else render(); }
-  if (miss) { state.onlyMiss = !state.onlyMiss; render(); }
 });
 addEventListener("keydown", e => { if (e.key === "Escape" && state.sel) select(null); });
 render();
