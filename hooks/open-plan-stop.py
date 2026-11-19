@@ -18,7 +18,7 @@ def states(lines):
             continue
         content = (d.get("message") or {}).get("content")
         if d.get("type") != "assistant":
-            if paused and isinstance(content, str) and not d.get("isMeta") and not content.startswith(NOT_HUMAN):
+            if paused and isinstance(content, str) and not d.get("isMeta") and not d.get("isCompactSummary") and not content.startswith(NOT_HUMAN):
                 plan, resumed, paused = paused, list(paused), None
             waiting -= set(NOTIFIED.findall(line))
             for b in content if isinstance(content, list) else []:

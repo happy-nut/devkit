@@ -14,7 +14,7 @@ CORRECT_SKILL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 
 
 def human_text(d):
-    if d.get("type") != "user" or d.get("isSidechain") or d.get("isMeta"):
+    if d.get("type") != "user" or d.get("isSidechain") or d.get("isMeta") or d.get("isCompactSummary"):
         return None
     c = (d.get("message") or {}).get("content")
     if isinstance(c, list) and c and all(isinstance(b, dict) and b.get("type") == "text" for b in c):
