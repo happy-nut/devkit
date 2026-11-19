@@ -47,6 +47,9 @@ scripts/check.py                저장소 검사. 고치면 반드시 돌린다
 | poteto-help | `help` | |
 | Orchestrate 플레이북 | `mode` 의 `playbooks/orchestrate.md` | Project tracker 대신 git 밖 노트 파일, 워커는 `Agent` |
 | benny(자동화 팩) | `triage` + `repro-fix` | Cursor Automations 대신 Claude Code 루틴 |
+| bro | (옮기지 않음) | 방금 한 말을 쉬운 말로 다시 하기. `write` 가 같은 일을 더 넓게 한다 |
+
+원본을 따라잡을 때는 프로젝트 스킬 `.claude/skills/upstream` 을 쓴다. 기준 커밋은 README 맨 아래 원본 링크 옆 한 곳에만 적는다.
 
 다른 스킬을 가리킬 때는 이름(`/dev:design`)으로, 같은 스킬 안 파일은 그 SKILL.md 기준 상대 경로(`playbooks/bug-fix.md`)로, 다른 스킬의 파일은 `../<스킬>/...` 로 쓴다. pstack 이름(poteto, pstack, principle-*)은 본문에 남기지 않는다.
 
