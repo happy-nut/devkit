@@ -13,7 +13,7 @@
 2. 코드에 빠진 구조를 이름 짓는다(principles.md 의 Model the Domain).
    모양이 이미 분명하고 국소적이면 지루한 코드는 그대로 둔다. 새 모양은 분기나 잘못된 상태를 지워야 한다. 간접층을 더하면 안 된다.
 3. 목표 모양을 이름 짓는다.
-   오늘 새로 만든다면 모듈 배치, 타입, 호출 그래프가 어떠해야 하는지 적는다(principles.md 의 Foundational Thinking, Redesign from First Principles). 목표가 함수 경계를 넘으면 옮기기 전에 `/dev:design` 으로 모양의 병렬 설계 탐색을 한다.
+   오늘 새로 만든다면 모듈 배치, 타입, 호출 그래프가 어떠해야 하는지 적는다(principles.md 의 Foundational Thinking, Redesign from First Principles). 목표가 함수 경계를 넘으면 옮기기 전에 `/dev:design` 으로 모양을 정한다.
 4. 더하기 전에 뺀다.
    새 모양을 들이기 전에 죽은 코드를 지우고, 호출자 하나뿐인 래퍼를 접고, 중복 검증기를 빼고, 고아 참조를 없앤다(principles.md 의 Subtract Before You Add). 목표 모양에 닿는 가장 작은 변경만 내보낸다(principles.md 의 Laziness Protocol). 「도움이 될지도」 싶은 추측성 정리는 되돌린다.
 5. 동작을 보존하는 작은 걸음으로 옮긴다. 걸음마다 고정이 초록이어야 한다.

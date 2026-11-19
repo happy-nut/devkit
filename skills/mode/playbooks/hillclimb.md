@@ -17,7 +17,7 @@
 4. 가설마다 1단계의 구조 모델에 근거해 구체 메커니즘을 이름 짓는다.
    「첫 그리기를 막으니 X 를 부팅 경로 밖으로 미룬다」처럼 쓴다. 「뭔가 메모이즈해 본다」는 가설이 아니다. 성능 지표면 `perf-issue.md` 2단계의 성능 주문 순서로 가설을 줄 세운다. 순서만 빌리고 그 단계의 정지 규칙은 빌리지 않는다.
 5. 회차마다 가설 하나로 돈다.
-   - 범위를 좁게 정해 서브에이전트(`subagent_type: "dev:worker"`, 모델 `opus`, 가장 어려운 변경이면 `fable`)에 맡긴다. 직접 치지 말고 감독하고 diff 를 리뷰한다(principles.md 의 Guard the Context Window). 독립 가설이 여럿 살아 있으면 서브에이전트마다 `isolation: "worktree"` 로 병렬로 보낸다(principles.md 의 Separate Before Serializing Shared State).
+   - 범위를 좁게 정해 서브에이전트(`subagent_type: "dev:worker"`, 모델 `opus`)에 맡긴다. 직접 치지 말고 감독하고 diff 를 리뷰한다(principles.md 의 Guard the Context Window). 독립 가설이 여럿 살아 있으면 서브에이전트마다 `isolation: "worktree"` 로 병렬로 보낸다(principles.md 의 Separate Before Serializing Shared State).
    - 동결한 하네스로 전후를 재고, 회귀 관문을 돌린다.
    - 지표가 잡음을 넘어 움직이고 관문이 초록일 때만 채택한다. 아니면 변경을 전부 되돌린다. 「도움이 될지도」 싶은 손질은 남기지 않는다.
    - 채택마다 커밋 하나. 바꾼 파일만 스테이징한다(`git add <files>`, `-A` 금지). 채택이든 되돌림이든 기록 한 줄을 남긴다.

@@ -12,9 +12,9 @@
    `autonomous-run.md` 0단계의 기초 관문도 통과해야 한다. 못 하면 대기열을 돌리지 않고 기초부터 만든다.
    권한은 대기열 항목만 덮는다. 사용자가 자기 것이라고 한 항목과 대기열 밖 PR 은 머지 준비에서 멈춘다. 계획을 말해 달라는 요청은 시작 신호가 아니다.
 2. PR 마다 담당 하나를 띄우고, 대신할 에이전트가 찾을 수 있는 곳에 작업을 둔다.
-   PR 도구는 프로그램에 한 번 정한다. `opening-a-pr.md` 6단계대로 `gh` 가 기본이고 `gt` 를 요구하지 않는다. 담당은 `Agent`(`subagent_type: "dev:worker"`, `model: "opus"`, 가장 어려운 변경이면 `"fable"`, `isolation: "worktree"`, `run_in_background: true`)다. 담당은 만들고, `opening-a-pr.md` 대로 PR 을 열고, 실제 산출물에서 변경을 증명하고(principles.md 의 Prove It Works), `babysit.md` 대로 초록까지 babysit 하고, 4·5단계가 통과시키면 머지한다. 브리프에는 사용자의 목표, 이 플레이북 경로, 저장소 `AGENTS.md`·`CLAUDE.md` 를 넣는다.
+   PR 도구는 프로그램에 한 번 정한다. `opening-a-pr.md` 6단계대로 `gh` 가 기본이고 `gt` 를 요구하지 않는다. 담당은 `Agent`(`subagent_type: "dev:worker"`, `model: "opus"`, `isolation: "worktree"`, `run_in_background: true`)다. 담당은 만들고, `opening-a-pr.md` 대로 PR 을 열고, 실제 산출물에서 변경을 증명하고(principles.md 의 Prove It Works), `babysit.md` 대로 초록까지 babysit 하고, 4·5단계가 통과시키면 머지한다. 브리프에는 사용자의 목표, 이 플레이북 경로, 저장소 `AGENTS.md`·`CLAUDE.md` 를 넣는다.
    PR 은 일찍 열어 CI 와 봇이 같이 돌게 한다. 코드는 diff 정리(`/simplify` 또는 diff 를 다시 읽어 서술 주석·근거 없는 방어 코드·죽은 호환 경로·관계없는 수정 지우기)와 `/dev:no-comments` 를 거친 뒤에야 준비된 것이다. 그래야 전체 스웜이 끝난 코드에서 돈다. 그다음 지금 trunk 에 rebase 하고, 자기 증명 전에 코드 준비 head 를 보고한다. 그래야 검증이 패치가 착지할 base 에서 돈다. 이후 head 도 모두 보고하고, 자기 증명·CI·babysit 이 끝나면 머지 준비를 보고한다. 고치는 회차는 그 base 에 머문다. trunk 가 충돌하거나, CI 를 깨거나, 같은 파일을 바꾸는 알려진 동시 변경이 들어올 때만 rebase 한다. rebase 마다 CI 가 다시 돌기 때문이다. 코드 준비 push 전과, 검증자가 필요한 이후 push 전에, 건드린 경로에 대한 저장소 검사를 커밋된 head 에서 돌린다.
-   담당이 죽는다고 가정한다. 시작하자마자 push 하고 `/dev:log` 로 결정 기록을 시작하고, 끝난 단위마다 push 한 뒤 다음을 시작한다. 서브에이전트를 띄우는 쪽은 그 agent id, 상태, 같은 종류의 지난 실행에서 잰 「이 시간이 지나면 막힌 것」을 결정 기록에 적는다. 부모가 죽어도 루트가 살펴볼 수 있게 하기 위해서다. force-push 는 자기 브랜치에만, 마지막으로 push 했거나 넘겨받은 SHA 에 묶은 `--force-with-lease` 로 한다. 자기가 하지 않은 push 를 보면 멈추고 루트에 보고한다.
+   담당이 죽는다고 가정한다. 시작하자마자 push 하고 `/dev:log` 로 결정 기록을 시작하고, 끝난 단위마다 push 한 뒤 다음을 시작한다. 서브에이전트를 띄우는 쪽은 그 agent id, 상태, 같은 종류의 지난 실행에서 잰 「이 시간이 지나면 막힌 것」을 결정 기록에 적는다. 부모가 죽어도 루트가 살펴볼 수 있게 하기 위해서다. force-push 는 자기 브랜치에만, 마지막으로 push 했거나 넘겨받은 SHA 에 묶은 `--force-with-lease` 로 한다. 자기가 하지 않은 push 를 보면 멈추고 루트에 보고한다. `babysit.md` 가 rebase 를 보고하라고 하는 곳에서 담당은 자기 브랜치를 직접 rebase 하고 이 `--force-with-lease` 로 올린다.
 3. 담당들을 trunk 에서 병렬로 돌린다. 쌓지 않는다.
    그래야 PR 마다 따로 착지한다.
 4. 스웜 검증은 한 번 한다.
