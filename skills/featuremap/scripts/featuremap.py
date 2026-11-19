@@ -4,6 +4,8 @@ import argparse, datetime, html, json, os, re, subprocess, sys, tempfile
 RUNNABLE = re.compile(r"\b(node|npm|npx|pnpm|yarn|bun|deno|python3?|pytest|bash|sh|go test|cargo|swift|xcodebuild|make)\b|\./|\.(mjs|js|ts|sh|py)\b")
 GAP_HEADINGS = re.compile(r"^##\s+(Not mapped|지도에 없|아직 지도)", re.I)
 SECTION = re.compile(r"^##\s+(.+?)\s*$", re.M)
+NOT_AFTER_WORD_OR_CSS_DOT = r"(?<![\w.-])"
+IN_CLASS_ATTRIBUTE = re.compile(r"""class(Name)?\s*=\s*["'{][^"'}]*$""")
 SKIP = re.compile(r"(^|/)(node_modules|dist|build|vendor|\.git)/")
 HANGUL = re.compile(r"[가-힣]")
 FEATURE_ID = re.compile(r"^([A-Z][A-Z0-9_-]*)\s+[\u2014\u2013-]+\s+(.+)$")
@@ -111,11 +113,13 @@ def proofs_for(ids, files):
     found = {i: [] for i in ids}
     if not ids:
         return found
-    pat = re.compile(r"(?<![\w-])(" + "|".join(sorted(map(re.escape, ids), key=len, reverse=True)) + r")(?![\w-])")
+    pat = re.compile(NOT_AFTER_WORD_OR_CSS_DOT + r"(" + "|".join(sorted(map(re.escape, ids), key=len, reverse=True)) + r")(?![\w-])")
     for path, lines in files:
         prose = path.lower().endswith((".md", ".txt"))
         for n, line in enumerate(lines, 1):
             for m in pat.finditer(line):
+                if IN_CLASS_ATTRIBUTE.search(line[:m.start()]):
+                    continue
                 if not prose or RUNNABLE.search(line):
                     found[m.group(1)].append({"path": path, "line": n, "text": line.strip()[:160]})
     return found
@@ -144,7 +148,7 @@ def read_map(features_dir, repo, ignore=()):
             if sid:
                 named = MAP_NAME.match(b)
                 subs.append({"id": sid, "text": b, "name": default_name(b, sid), "map_name": re.sub(r"`", "", named.group(1)).strip() if named else "",
-                             "map_desc": plain(named.group(2)) if named else "", "html": inline(b), "method": re.search(r"(?<![\w-])" + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
+                             "map_desc": plain(named.group(2)) if named else "", "html": inline(b), "method": re.search(NOT_AFTER_WORD_OR_CSS_DOT + re.escape(sid) + r"(?![\w-])", drive_body) is not None})
         title_text = h1.group(1).strip() if h1 else name[:-3]
         fid = FEATURE_ID.match(title_text)
         own_id = fid.group(1) if fid else name if any(x["id"] == name[:-3] for x in subs) else name[:-3]
@@ -339,6 +343,9 @@ def self_test():
         with open(os.path.join(feat, "README.md"), "a") as f:
             f.write("\n## Not mapped yet\n\n- 내보내기 메뉴,\n  설정 화면\n- 휴지통\n")
         open(os.path.join(t, "drive.sh"), "w").write("node drive.mjs create-open\n")
+        open(os.path.join(t, "app.js"), "w").write("click('.search-empty')\n<b class=\"x search-empty\">\n")
+        with open(os.path.join(feat, "search.md"), "a") as f:
+            f.write("\n- 빈 상태는 `.search-empty .note` 로 찾는다.\n")
         open(os.path.join(feat, "inbox.md"), "w").write("# Inbox\n\n## Sub-features\n\n- `inbox` 받은 편지함 목록.\n")
         open(os.path.join(t, "keys.ts"), "w").write('bind("newNote", "New note")\nbind("search", "/")\nbind("searchBtn", "Search")\n')
         surf = os.path.join(t, "surfaces.json")
@@ -362,6 +369,7 @@ def self_test():
         status = {s["id"]: s["status"] for f in data["features"] for s in f["subs"]}
         assert status["create-open"] == "auto", "실행 파일이 ID 를 가리키면 자동 검증"
         assert status["create-save"] == "method", "Driving 글머리에 ID 가 있으면 방법만"
+        assert status["search-empty"] == "none", "CSS 클래스 .search-empty·class 속성 안의 search-empty 는 하위 기능 ID 가 아니다"
         assert status["create-cancel"] == "auto", "이름 파일의 verified_by 가 짚은 시험이 실제로 있으면 자동 검증(ID 를 안 담는 백엔드·라이브러리 시험)"
         assert "근거를 못 찾음 create-cancel: tests/missing.py::test_x" in data["problems"], "짚은 시험 파일이 없으면 잡는다"
         named_proof = next(s for f in data["features"] for s in f["subs"] if s["id"] == "create-cancel")["proofs"][0]
