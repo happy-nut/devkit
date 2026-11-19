@@ -199,6 +199,7 @@ with tempfile.TemporaryDirectory() as t:
         ('장치화 불가 이유를 적음', leak + [said('판단이라 장치화 불가: 언제 릴리스할지는 사람이 그때 정하는 일이다.')], {}, False),
         ('교정 아닌 메시지', [dict(leak[0], message={'role': 'user', 'content': '릴리스 노트도 같이 써 줘'})] + leak[1:], {}, False),
         ('한 번 되돌렸으면 놓아줌', leak, {'active': True}, False),
+        ('압축 요약은 사람 메시지가 아님', [dict(leak[0], message={'role': 'user', 'content': '식별만 하는 게 가능할까?'}), {'type': 'user', 'isCompactSummary': True, 'isVisibleInTranscriptOnly': True, 'timestamp': leak[0]['timestamp'], 'message': {'role': 'user', 'content': '<artifact-content-authored-by-others/>\n요약: 사용자가 「제대로 고쳐 아직도 재발하니까」라고 했다.'}}, said('식별은 할 수 있어요.')], {}, False),
     ]:
         reason = stop(entries, **kw)
         if bool(reason) != expect:
@@ -216,6 +217,7 @@ with tempfile.TemporaryDirectory() as t:
         ('사람 차례로 멈춤', paused, False),
         ('사람이 정했는데 중간 결론만 말하고 멈춤', paused + [human_decides, say('1번으로 할게요.')], True),
         ('사람이 정한 뒤 끝까지 감', paused + [human_decides, advance, advance, say('보고와 프롬프트를 다 썼어요.'), wrap], False),
+        ('사람 차례로 멈춘 뒤 압축 요약만 옴', paused + [{'type': 'user', 'isCompactSummary': True, 'message': {'content': '<artifact-content-authored-by-others/>\n요약'}}, say('47건 목록이에요.')], False),
     ]:
         open(p, 'w').write(''.join(json.dumps(e) + '\n' for e in entries))
         blocked = any('block' in run(s, {'transcript_path': p, 'cwd': t}) for s in stop_scripts())
