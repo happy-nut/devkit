@@ -20,7 +20,7 @@
 
    앞 단계가 목표에 닿으면 멈춘다.
 3. trace 를 근거로 수정을 계획하고 맡긴다.
-   함수 경계를 넘으면 먼저 `/dev:design`. 구현은 서브에이전트(`subagent_type: "dev:worker"`, 모델 `opus`, 가장 어려운 변경이면 `fable`)에 맡긴다. diff 를 리뷰한다. 수정 뒤 trace 를 다시 잡는다. principles.md 의 Sequence Work into Verifiable Units 대로 시도 하나를 검증한 뒤 다음 시도로 간다.
+   함수 경계를 넘으면 먼저 `/dev:design`. 구현은 서브에이전트(`subagent_type: "dev:worker"`, 모델 `opus`)에 맡긴다. diff 를 리뷰한다. 수정 뒤 trace 를 다시 잡는다. principles.md 의 Sequence Work into Verifiable Units 대로 시도 하나를 검증한 뒤 다음 시도로 간다.
 4. 산출물을 파싱해 비교한다.
    JSON 은 sqlite 로 옮겨 쿼리하고, 전후를 diff 한다. 「판단 불가」나 다른 표면의 결과는 통과가 아니다. 그렇게 표시한다. 화면에서 느끼는 속도가 문제였으면 화면에서 다시 재 본다.
 5. PR 에 측정을 인용한다.

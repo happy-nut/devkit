@@ -29,7 +29,7 @@ disable-model-invocation: true
 | 역할 키 | 쓰는 곳 | 기본값 |
 |---|---|---|
 | `code` | 코드·판단·글. 플레이북 구현 워커, 결정 기록 검토 | `opus` |
-| `hardest` | 가장 어려운 일(교차 설계, 까다로운 동시성, 미묘한 알고리즘) | `fable` |
+| `hardest` | `code` 모델 대신 올리는 모델. 사용자가 그 일에 이 모델을 말했거나, 같은 브리프로 `code` 모델이 두 번 다 검사를 못 넘겼을 때만(`/dev:mode` 「서브에이전트」 절). 어렵다는 것만으로는 쓰지 않는다 | `fable` |
 | `mechanical` | 검증·기계적 편집·스웜 워커·넓게 읽기 | `sonnet` |
 | `panel` | 설계·리뷰 패널(`/dev:design` 러너, `/dev:review` 검토자). 목록 | `["fable", "opus", "sonnet"]` |
 
