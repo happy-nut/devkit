@@ -17,7 +17,7 @@ description: "/dev:mode 실행 중에 부모가 맡기는 코드 쓰기·보조 
 부모가 브리프에 준 절대 경로를 쓴다. 경로가 없으면 다른 일을 하기 전에 찾는다.
 
 ```bash
-ls -d ~/.claude/plugins/cache/devkit/devkit/*/ | tail -1
+python3 -I -c "import json,os; print(next(i['installPath'] for k,v in json.load(open(os.path.expanduser('~/.claude/plugins/installed_plugins.json')))['plugins'].items() if k.split('@')[0]=='dev' for i in v))"
 ```
 
 그 출력 폴더 아래 `skills/mode/SKILL.md` 와 `skills/mode/principles.md` 다. 출력이 없으면 부모 브리프의 절대 경로를 다시 본다. 둘 다 없으면 멈추고 부모에게 알린다. 스킬 목록에 mode 가 안 보여도 devkit 이 없다는 뜻이 아니다.

@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 「devkit 으로 이 버그 고쳐」처럼 일을 시키는 말은 안내 질문이 아니다. `/dev:mode` 를 읽고 그대로 일한다. 그리고 다음부터는 일마다 `/dev:mode` 로 시작하면 된다고 한 번 말한다.
 
-이 파일은 질문을 답이 있는 스킬·파일로 보내는 지도다. 자세한 내용은 그 파일이 가진다. 인용하기 전에 보내는 파일을 읽고, 이 지도와 다르면 그 파일을 믿는다. 파일 위치는 설치된 플러그인 폴더(`ls -d ~/.claude/plugins/cache/devkit/devkit/*/ | tail -1`) 기준 경로로 준다. 사용자가 포크를 쓰면 그 저장소 경로로 준다.
+이 파일은 질문을 답이 있는 스킬·파일로 보내는 지도다. 자세한 내용은 그 파일이 가진다. 인용하기 전에 보내는 파일을 읽고, 이 지도와 다르면 그 파일을 믿는다. 파일 위치는 이 스킬 폴더의 두 단계 위(플러그인 폴더) 기준 경로로 준다. 사용자가 포크를 쓰면 그 저장소 경로로 준다.
 
 ## 무엇이 필요한지
 
@@ -41,14 +41,7 @@ disable-model-invocation: true
 
 설치만으로는 스킬이 움직이지 않는다. 모든 devkit 스킬은 사용자가 부를 때만 뜬다(`disable-model-invocation: true`). 설치하면 바로 켜지는 것은 훅뿐이다.
 
-| 훅 | 하는 일 |
-|---|---|
-| `korean-stop.py` (Stop) | 사용자에게 한 마지막 말이 한국어가 아니면 한 번 되돌려 한국어로 다시 쓰게 한다(코드·경로·짧은 줄은 제외) |
-| `open-plan-stop.py` (Stop) | 작업 목록에 끝나지 않은 단계가 남았는데 `wrap_up` 없이 턴을 닫으면 한 번 되돌린다(기다리는 백그라운드 작업이 있으면 통과) |
-| `guard-bash.py` (PreToolUse, Bash) | 바뀐 파일이 0개이거나 체크가 아직 안 붙었거나 돌고 있거나 실패한 PR 의 `gh pr merge` 를 막는다. `pytest … \| tail && 커밋·머지` 처럼 실패를 삼키는 줄도 막는다 |
-| `tool-text.py` (PreToolUse, 사용자가 읽는 도구 글) | 작업 요약·작업 목록·버튼(`wrap_up`·`update_plan`), 파일 캡션, `AskUserQuestion` 질문·선택지, Bash 설명이 한국어가 아니면 막는다(판정은 `korean-stop.py` 와 같다. 짧은 글은 한글 낱말 없이 두 낱말 이상일 때만). `AskUserQuestion` 질문이 둘 이상이어도 막는다 |
-
-훅 표의 정본은 README 「훅」 절이다. 첫 프롬프트를 같이 다듬자고 제안한다. `references/prompting.md` 를 따른다.
+훅마다 하는 일은 플러그인 폴더 `README.md` 의 「훅」 절에 있다. 첫 프롬프트를 같이 다듬자고 제안한다. `references/prompting.md` 를 따른다.
 
 비용이 걱정이면 토큰이 어디로 가는지와 덜 쓰는 법을 말한다. devkit 은 서브에이전트와 리뷰·설계 패널에 토큰을 더 쓴다. `/dev:setup` 을 다시 돌려 모델을 낮추거나(`아끼기`, 또는 역할별로 `sonnet`·`haiku`) 패널 목록을 줄인다. 패널 항목 하나가 서브에이전트 하나다. `/dev:mode` 는 엄격함이 필요한 일에만 쓴다. 검증에 쓰는 토큰은 줄이지 않는 게 devkit 의 원칙이라는 것도 같이 말한다.
 
@@ -145,7 +138,7 @@ devkit 에 없는 것:
 
 devkit 에는 계획 전용 스킬이 없다. Claude Code 의 계획 모드와 같이 써도 된다. 여러 단계나 쌓인 PR 에 걸친 일은 `/dev:mode` 에 계획을 달라고 하면 여러 단계 계획 플레이북이 계획만 쓴다. 설계 질문은 프로토타입 플레이북이나 `/dev:design` 이 코드로 먼저 정한다.
 
-원칙은 `../mode/principles.md` 한 파일에 24개가 있다. `/dev:mode` 가 읽고 답에서 이름을 댄다. 사용자는 원칙을 부르지 않고 이름으로 방향을 튼다. 「Prove It Works 로 다시 봐. 진짜 출력을 보여 줘」, 「Fix Root Causes」, 「Laziness Protocol」. 목록은 그 파일의 「색인」 절이다.
+원칙은 `../mode/principles.md` 한 파일에 있다. `/dev:mode` 가 읽고 답에서 이름을 댄다. 사용자는 원칙을 부르지 않고 이름으로 방향을 튼다. 「Prove It Works 로 다시 봐. 진짜 출력을 보여 줘」, 「Fix Root Causes」, 「Laziness Protocol」. 목록은 그 파일의 「색인」 절이다.
 
 ## 잘못 돈 실행 바로잡기
 
