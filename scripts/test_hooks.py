@@ -224,6 +224,37 @@ with tempfile.TemporaryDirectory() as t:
         if blocked != expect:
             fails.append(f'Stop 훅 전체 여러 턴: {name}')
 
+PR = 'https://github.com/me/app/pull/7'
+def bash(i, cmd, bg=False):
+    return {'type': 'assistant', 'message': {'content': [{'type': 'tool_use', 'id': f'toolu_{i}', 'name': 'Bash', 'input': dict(command=cmd, **({'run_in_background': True} if bg else {}))}]}}
+def result(i, text):
+    return {'type': 'user', 'message': {'content': [{'type': 'tool_result', 'tool_use_id': f'toolu_{i}', 'content': text}]}}
+asked = {'type': 'user', 'message': {'content': '로그인 버그 고쳐'}}
+opened = [asked, bash(1, 'gh pr create --fill'), result(1, PR), say('PR 을 열었어요. CI 체크 1개는 아직 돌고 있어요.')]
+with tempfile.TemporaryDirectory() as t:
+    home, bin_ = os.path.join(t, 'home'), os.path.join(t, 'bin')
+    os.makedirs(os.path.join(home, '.claude')); os.makedirs(bin_)
+    json.dump({'personal': {'owners': ['me']}}, open(os.path.join(home, '.claude', 'devkit.json'), 'w'))
+    gh = os.path.join(bin_, 'gh')
+    p = os.path.join(t, 'tx.jsonl')
+    for name, entries, state, active, expect in [
+        ('개인 PR 을 열고 머지 없이 닫음', opened, 'OPEN', False, True),
+        ('이미 머지됨', opened, 'MERGED', False, False),
+        ('회사 저장소 PR', [asked, bash(1, 'gh pr create'), result(1, PR.replace('/me/', '/corp/')), say('PR 열었어요.')], 'OPEN', False, False),
+        ('체크를 백그라운드로 기다리는 중', opened + [bash(2, 'gh pr checks 7 --watch', bg=True), result(2, 'Command running in background')], 'OPEN', False, False),
+        ('머지 안 함 이유를 적음', opened + [say('머지 안 함: 화면 문구라 사람 승인이 필요해요.')], 'OPEN', False, False),
+        ('사람이 머지하지 말라고 함', [{'type': 'user', 'message': {'content': '고치고 PR 만 올려, 머지하지 마'}}] + opened[1:], 'OPEN', False, False),
+        ('한 번 되돌렸으면 놓아줌', opened, 'OPEN', True, False),
+        ('통과 뒤 사람이 다른 걸 물음', opened + [say('머지 안 함: 사람 리뷰가 필요해요.'), {'type': 'user', 'message': {'content': '그 PR 은 두고 다른 거 물어볼게'}}, say('네, 말씀하세요.')], 'OPEN', False, False),
+    ]:
+        open(gh, 'w').write(f'#!/bin/sh\necho {state}\n'); os.chmod(gh, 0o755)
+        open(p, 'w').write(''.join(json.dumps(e, ensure_ascii=False) + '\n' for e in entries))
+        env = dict(os.environ, HOME=home, PATH=bin_ + os.pathsep + os.environ['PATH'])
+        outs = [subprocess.run([sys.executable, '-I', os.path.join(hooks, s)], input=json.dumps({'transcript_path': p, 'cwd': t, 'stop_hook_active': active}), capture_output=True, text=True, env=env).stdout for s in stop_scripts()]
+        blocked = any(('block' in o) if name.startswith('통과 뒤') else ('머지되지 않은' in o) for o in outs)
+        if blocked != expect:
+            fails.append(f'open-pr-stop: {name} (되돌림 {"있음" if blocked else "없음"}) {outs}')
+
 if fails:
     sys.exit('훅 시험 실패:\n' + '\n'.join(fails))
 print('훅 시험 OK')
