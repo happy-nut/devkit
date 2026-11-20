@@ -47,7 +47,7 @@ gh api repos/<원본 저장소>/commits/<sha> --jq '.files[] | select(.filename|
 
 ## 4. 내보낸다
 
-`.claude-plugin/plugin.json` 판을 올리고 `python3 scripts/check.py` 를 돌린 뒤 PR 을 연다. PR 본문 `## What` 에 원본 커밋마다 한 줄씩, kit 대상마다 「반영 / 이미 있음 / 버림」과 이유를 쓴다. 다음에 따라잡는 사람은 이 PR 을 보고 왜 버렸는지 안다.
+`.claude-plugin/plugin.json` 판을 올리고 `python3 scripts/check.py` 를 돌린 뒤 PR 을 연다. 글을 줄였으면 `python3 -I scripts/shrink.py` 출력도 본문에 붙인다. PR 본문 `## What` 에 원본 커밋마다 한 줄씩, kit 대상마다 「반영 / 이미 있음 / 버림」과 이유를 쓴다. 다음에 따라잡는 사람은 이 PR 을 보고 왜 버렸는지 안다.
 
 ## 스크립트를 고칠 때
 

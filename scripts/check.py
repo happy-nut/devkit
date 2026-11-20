@@ -97,6 +97,29 @@ def check_required_sentences():
                 errors.append(f'{path}:{i}: 교정은 매번 굳힌다. 「두 번」 조건이 남음')
 
 
+def check_single_source(principles):
+    hooks = sorted({h['command'].split('/')[-1] for g in json.load(open('hooks/hooks.json'))['hooks'].values() for e in g for h in e['hooks']})
+    readme = open('README.md').read()
+    listed = sorted(set(re.findall(r'^\| `hooks/([\w-]+\.py)`', readme, re.M)))
+    if listed != hooks:
+        errors.append(f'README.md 「훅」 표 {listed} 가 hooks/hooks.json {hooks} 와 다르다')
+    counts = {'원칙': len(principles), '플레이북': len(glob.glob('skills/mode/playbooks/*.md'))}
+    for word, n in counts.items():
+        for m in re.finditer(rf'{word} (\d+)개', readme):
+            if int(m.group(1)) != n:
+                errors.append(f'README.md: 「{m.group(0)}」 인데 실제로는 {n}개다')
+    owner = {r'어렵다는 것만으로는|두 번 다 검사를 못 넘': 'skills/mode/SKILL.md'}
+    for path in glob.glob('skills/**/*.md', recursive=True) + glob.glob('agents/*.md') + ['docs/authoring.md']:
+        for i, line in enumerate(open(path).read().splitlines(), 1):
+            if re.search(r'plugins/cache/[\w*.-]+/[\w*.-]+/\*', line):
+                errors.append(f'{path}:{i}: 설치 폴더를 이름과 판으로 짐작하지 않는다. 스킬은 자기 폴더를, 에이전트는 installed_plugins.json 의 installPath 를 쓴다')
+            if re.match(r'\| `(hooks/)?[\w-]+\.py`', line) and line.split('`')[1].split('/')[-1] in hooks:
+                errors.append(f'{path}:{i}: 훅 표는 README.md 「훅」 절에만 둔다')
+            for pattern, home in owner.items():
+                if path != home and re.search(pattern, line):
+                    errors.append(f'{path}:{i}: 이 규칙은 {home} 에만 쓰고 여기서는 그 절을 가리킨다')
+
+
 def private_words_from_user_config():
     cfg_path = os.path.expanduser('~/.claude/devkit.json')
     cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {}
@@ -141,7 +164,7 @@ def check_version_bumps_last_digit_by_one():
 
 
 def run_self_tests():
-    for cmd in (['scripts/test_hooks.py'], ['skills/no-comments/scripts/count.py', '--self-test'], ['skills/featuremap/scripts/featuremap.py', '--self-test'], ['.claude/skills/upstream/upstream.py', '--self-test']):
+    for cmd in (['scripts/test_hooks.py'], ['skills/no-comments/scripts/count.py', '--self-test'], ['skills/featuremap/scripts/featuremap.py', '--self-test'], ['.claude/skills/upstream/upstream.py', '--self-test'], ['scripts/shrink.py', '--self-test']):
         r = subprocess.run([sys.executable, '-I', *cmd], capture_output=True, text=True)
         if r.returncode:
             sys.exit(r.stdout + r.stderr)
@@ -154,6 +177,7 @@ check_frontmatter(skills, agents)
 principles = load_principles()
 check_old_names_and_references(skills, agents, principles)
 check_required_sentences()
+check_single_source(principles)
 check_no_private_words()
 check_author_email_is_noreply()
 check_version_bumps_last_digit_by_one()
